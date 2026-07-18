@@ -17,7 +17,6 @@ import {
   useGetBucketSummariesQuery,
   useRevokeAccountMutation,
   useSyncAccountMutation,
-  type AccountSyncStats,
   type ConnectAccountRequest,
   type IntegrationAccount,
 } from '@/api/accountsApi'

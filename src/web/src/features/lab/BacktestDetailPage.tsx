@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { HistoryIcon, Loader2Icon } from 'lucide-react'
 import { toast } from 'sonner'
@@ -38,17 +38,16 @@ const TF_SECONDS: Record<LabTimeframe, number> = {
 
 export default function BacktestDetailPage() {
   const { id = '' } = useParams<{ id: string }>()
-  // Poll only while the run is still in flight.
-  const [pollingInterval, setPollingInterval] = useState(2000)
+  // Poll only while the run is still in flight ("adjust state during render" pattern).
+  const [settled, setSettled] = useState(false)
   const { data: report, isLoading, error } = useGetBacktestQuery(id, {
     skip: !id,
-    pollingInterval,
+    pollingInterval: settled ? 0 : 2000,
     skipPollingIfUnfocused: true,
   })
   const running = report?.status === 'pending' || report?.status === 'running'
-  useEffect(() => {
-    setPollingInterval(report && !running ? 0 : 2000)
-  }, [report, running])
+  if (report && !running && !settled) setSettled(true)
+  if (report && running && settled) setSettled(false)
 
   const { data: pipeline } = useGetPipelineQuery(report?.strategyId ?? '', {
     skip: !report?.strategyId,

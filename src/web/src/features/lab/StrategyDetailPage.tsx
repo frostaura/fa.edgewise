@@ -172,12 +172,15 @@ export default function StrategyDetailPage() {
   const [form, setForm] = useState<StrategyForm | null>(null)
   const [dirty, setDirty] = useState(false)
 
-  useEffect(() => {
-    if (strategy) {
-      setForm(ruleTreeToForm(strategy.ruleTree))
-      setDirty(false)
-    }
-  }, [strategy])
+  // Re-seed the form whenever a different strategy/version arrives
+  // ("adjust state during render" pattern — avoids an effect).
+  const [loadedKey, setLoadedKey] = useState('')
+  const strategyKey = strategy ? `${strategy.id}:${strategy.currentVersion}` : ''
+  if (strategy && strategyKey !== loadedKey) {
+    setForm(ruleTreeToForm(strategy.ruleTree))
+    setDirty(false)
+    setLoadedKey(strategyKey)
+  }
 
   // ---- backtest panel state
   const [btInstrument, setBtInstrument] = useState<LabInstrument | null>(null)
