@@ -198,8 +198,8 @@ export default function NewPlanPage() {
 
   const [template, setTemplate] = React.useState<PlanTemplate | null>(null)
   const [instrument, setInstrument] = React.useState<InstrumentSummary | null>(null)
-  const [bucketId, setBucketId] = React.useState('')
-  const [riskProfileId, setRiskProfileId] = React.useState('')
+  const [bucketChoice, setBucketChoice] = React.useState('')
+  const [riskProfileChoice, setRiskProfileChoice] = React.useState('')
   const [direction, setDirection] = React.useState<TradeDirection>('long')
   const [setupTag, setSetupTag] = React.useState('')
   const [triggerText, setTriggerText] = React.useState('')
@@ -212,18 +212,15 @@ export default function NewPlanPage() {
   const [isPaper, setIsPaper] = React.useState(false)
   const [checked, setChecked] = React.useState<Record<string, boolean>>({})
 
-  // Sensible defaults once lookups land.
-  React.useEffect(() => {
-    if (!lookups) return
-    if (!bucketId) {
-      const trading = lookups.buckets.find((b) => b.kind === 'trading') ?? lookups.buckets[0]
-      if (trading) setBucketId(trading.id)
-    }
-    if (!riskProfileId) {
-      const active = lookups.riskProfiles.find((p) => p.isActive) ?? lookups.riskProfiles[0]
-      if (active) setRiskProfileId(active.id)
-    }
-  }, [lookups, bucketId, riskProfileId])
+  // Sensible defaults derived from lookups until the user picks explicitly.
+  const bucketId =
+    bucketChoice ||
+    (lookups?.buckets.find((b) => b.kind === 'trading') ?? lookups?.buckets[0])?.id ||
+    ''
+  const riskProfileId =
+    riskProfileChoice ||
+    (lookups?.riskProfiles.find((p) => p.isActive) ?? lookups?.riskProfiles[0])?.id ||
+    ''
 
   const applyTemplate = (t: PlanTemplate) => {
     setTemplate(t)
@@ -372,7 +369,7 @@ export default function NewPlanPage() {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Bucket</Label>
-          <Select value={bucketId} onValueChange={setBucketId}>
+          <Select value={bucketId} onValueChange={setBucketChoice}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Bucket" />
             </SelectTrigger>
@@ -387,7 +384,7 @@ export default function NewPlanPage() {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Risk profile</Label>
-          <Select value={riskProfileId} onValueChange={setRiskProfileId}>
+          <Select value={riskProfileId} onValueChange={setRiskProfileChoice}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Risk profile" />
             </SelectTrigger>

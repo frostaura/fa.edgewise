@@ -110,7 +110,14 @@ export default function JournalPage() {
   const [search, setSearch] = React.useState('')
   const [debouncedSearch, setDebouncedSearch] = React.useState('')
   const [page, setPage] = React.useState(1)
-  const [quickLogOpen, setQuickLogOpen] = React.useState(searchParams.get('quicklog') === '1')
+  const [quickLogLocal, setQuickLogLocal] = React.useState(false)
+
+  // The command palette deep-links Quick Log via /journal?quicklog=1.
+  const quickLogOpen = quickLogLocal || searchParams.get('quicklog') === '1'
+  const setQuickLogOpen = (next: boolean) => {
+    setQuickLogLocal(next)
+    if (!next && searchParams.get('quicklog') === '1') setSearchParams({}, { replace: true })
+  }
 
   React.useEffect(() => {
     const handle = setTimeout(() => {
@@ -119,14 +126,6 @@ export default function JournalPage() {
     }, 300)
     return () => clearTimeout(handle)
   }, [search])
-
-  // The command palette deep-links Quick Log via /journal?quicklog=1.
-  React.useEffect(() => {
-    if (searchParams.get('quicklog') === '1') {
-      setQuickLogOpen(true)
-      setSearchParams({}, { replace: true })
-    }
-  }, [searchParams, setSearchParams])
 
   const filters = {
     ...(status !== ALL ? { status: status as TradeStatus } : {}),

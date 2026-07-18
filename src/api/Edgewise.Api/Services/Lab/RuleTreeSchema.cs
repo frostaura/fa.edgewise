@@ -114,7 +114,11 @@ public sealed class RuleTreeValidator
         }
 
         // Semantic checks the schema cannot express.
-        var root = node!.AsObject();
+        if (node is not JsonObject root)
+        {
+            fields["$"] = "ruleTree must be a JSON object.";
+            return fields;
+        }
 
         if (root["conditions"] is JsonArray conditions)
         {

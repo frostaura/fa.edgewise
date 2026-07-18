@@ -274,13 +274,12 @@ export default function TradeDetailPage() {
   const [recompute, { isLoading: recomputing }] = useRecomputeAdherenceMutation()
 
   const [notes, setNotes] = React.useState('')
-  const [tagsInput, setTagsInput] = React.useState('')
+  const [tagsDraft, setTagsDraft] = React.useState('')
   const [tagsDirty, setTagsDirty] = React.useState(false)
   const [closeOpen, setCloseOpen] = React.useState(false)
 
-  React.useEffect(() => {
-    if (detail && !tagsDirty) setTagsInput(detail.tags.join(', '))
-  }, [detail, tagsDirty])
+  // Server tags until the user edits, then their draft.
+  const tagsInput = tagsDirty ? tagsDraft : (detail?.tags.join(', ') ?? '')
 
   if (isLoading || !detail) {
     return (
@@ -560,7 +559,7 @@ export default function TradeDetailPage() {
                     id="trade-tags"
                     value={tagsInput}
                     onChange={(e) => {
-                      setTagsInput(e.target.value)
+                      setTagsDraft(e.target.value)
                       setTagsDirty(true)
                     }}
                     placeholder="breakout, a-plus, news-day"

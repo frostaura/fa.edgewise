@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CalendarCheckIcon, CheckIcon, ChevronLeftIcon, ChevronRightIcon, FlameIcon } from 'lucide-react'
 import { addDays, format, parseISO, startOfWeek } from 'date-fns'
 
@@ -17,6 +17,67 @@ function mondayOf(date: Date): string {
   return format(startOfWeek(date, { weekStartsOn: 1 }), 'yyyy-MM-dd')
 }
 
+interface NotesEditorProps {
+  review: import('@/features/coach/types').WeeklyReview
+  saving: boolean
+  onSave: (notes: string, focus: string, complete: boolean) => void
+}
+
+/** Editable notes + focus commitment. Remounted (via key) when the review row changes. */
+function NotesEditor({ review, saving, onSave }: NotesEditorProps) {
+  const [notes, setNotes] = useState(review.userEditsMd ?? '')
+  const [focus, setFocus] = useState(review.focusCommitment ?? '')
+  const completed = Boolean(review.completedAt)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Your notes</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <Textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="What actually happened this week? Markdown welcome."
+          rows={8}
+          disabled={completed}
+          aria-label="Weekly review notes"
+        />
+        <Input
+          value={focus}
+          onChange={(e) => setFocus(e.target.value)}
+          placeholder="One focus commitment for next week…"
+          disabled={completed}
+          aria-label="Focus commitment"
+        />
+        <div className="flex items-center justify-between">
+          {completed ? (
+            <Badge variant="success">
+              <CheckIcon aria-hidden />
+              Completed {format(parseISO(review.completedAt!), 'd MMM HH:mm')}
+            </Badge>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={saving}
+              onClick={() => onSave(notes, focus, false)}
+            >
+              Save draft
+            </Button>
+          )}
+          {!completed && (
+            <Button size="sm" disabled={saving} onClick={() => onSave(notes, focus, true)}>
+              <CheckIcon aria-hidden />
+              Complete review
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 /**
  * The weekly review flow: coach-drafted pack (InsightCard), the trader's own notes
  * (markdown), a single focus commitment, completion + streak.
@@ -26,22 +87,12 @@ export default function WeeklyReviewPage() {
   const { data, isLoading, isFetching } = useGetWeeklyReviewQuery(weekStart)
   const [updateReview, { isLoading: saving }] = useUpdateWeeklyReviewMutation()
 
-  const [notes, setNotes] = useState('')
-  const [focus, setFocus] = useState('')
-
-  useEffect(() => {
-    setNotes(data?.review.userEditsMd ?? '')
-    setFocus(data?.review.focusCommitment ?? '')
-  }, [data?.review.id, data?.review.userEditsMd, data?.review.focusCommitment])
-
   const weekLabel = useMemo(() => {
     const start = parseISO(weekStart)
     return `${format(start, 'd MMM')} – ${format(addDays(start, 6), 'd MMM yyyy')}`
   }, [weekStart])
 
-  const completed = Boolean(data?.review.completedAt)
-
-  const save = (complete: boolean) =>
+  const save = (notes: string, focus: string, complete: boolean) =>
     void updateReview({ weekStart, userEditsMd: notes, focusCommitment: focus, complete })
 
   return (
@@ -98,46 +149,7 @@ export default function WeeklyReviewPage() {
               />
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Your notes</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="What actually happened this week? Markdown welcome."
-                  rows={8}
-                  disabled={completed}
-                  aria-label="Weekly review notes"
-                />
-                <Input
-                  value={focus}
-                  onChange={(e) => setFocus(e.target.value)}
-                  placeholder="One focus commitment for next week…"
-                  disabled={completed}
-                  aria-label="Focus commitment"
-                />
-                <div className="flex items-center justify-between">
-                  {completed ? (
-                    <Badge variant="success">
-                      <CheckIcon aria-hidden />
-                      Completed {format(parseISO(data.review.completedAt!), 'd MMM HH:mm')}
-                    </Badge>
-                  ) : (
-                    <Button variant="outline" size="sm" disabled={saving} onClick={() => save(false)}>
-                      Save draft
-                    </Button>
-                  )}
-                  {!completed && (
-                    <Button size="sm" disabled={saving} onClick={() => save(true)}>
-                      <CheckIcon aria-hidden />
-                      Complete review
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <NotesEditor key={data.review.id} review={data.review} saving={saving} onSave={save} />
           </div>
 
           <div className="flex flex-col gap-4">

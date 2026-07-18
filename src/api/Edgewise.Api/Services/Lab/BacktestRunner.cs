@@ -23,9 +23,10 @@ public sealed record BacktestConfig(
 /// rule tree onto the domain records, runs <see cref="Backtester.Build"/> and persists
 /// the result + honesty report. Runs either as a Hangfire job (no HTTP user - all reads
 /// ignore the per-user query filters; ownership was enforced when the row was created)
-/// or inline when Hangfire is disabled.
+/// or inline when Hangfire is disabled. When the MarketData service is registered it is
+/// used (defensively) to tail-fetch missing bars; otherwise stored bars are used as-is.
 /// </summary>
-public sealed class BacktestRunner(EdgewiseDbContext db)
+public sealed class BacktestRunner(EdgewiseDbContext db, IServiceProvider services)
 {
     public const int MinBars = 100;
 
@@ -64,6 +65,24 @@ public sealed class BacktestRunner(EdgewiseDbContext db)
             }
 
             var instrumentId = instrumentIds[0];
+
+            // Best-effort tail-fetch via the market-data vertical when available;
+            // any failure falls back to the bars already stored.
+            var marketData = services.GetService<Edgewise.Infrastructure.MarketData.MarketDataService>();
+            if (marketData is not null)
+            {
+                try
+                {
+                    await marketData.GetBarsAsync(
+                        instrumentId, backtest.Timeframe, backtest.RangeStart, backtest.RangeEnd,
+                        fetchTimeout: TimeSpan.FromSeconds(15), ct);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    // Stored bars only — the fetch is an optimisation, not a dependency.
+                }
+            }
+
             var bars = await db.PriceBars
                 .Where(p => p.InstrumentId == instrumentId
                     && p.Timeframe == backtest.Timeframe
