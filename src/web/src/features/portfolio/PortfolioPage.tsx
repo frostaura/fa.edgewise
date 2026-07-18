@@ -52,6 +52,11 @@ import { buildConicGradient, buildRingSegments } from './lib/allocation'
 import { ladderBadge } from './lib/ladder'
 import { formatMinor, formatMinorSigned, formatPct, formatPctSigned, signTone } from './lib/money'
 
+/** Stale chip that degrades to a plain badge when no quote timestamp exists. */
+function StaleChip({ asOf }: { asOf?: string | null }) {
+  return asOf ? <StaleBadge updatedAt={asOf} /> : <Badge variant="warning">stale</Badge>
+}
+
 export default function PortfolioPage() {
   const { data: summary, isLoading } = useGetPortfolioSummaryQuery()
   const { data: holdings } = useGetHoldingsQuery()
@@ -233,7 +238,7 @@ function BucketCard({ bucket, currency }: { bucket: BucketSummary; currency: str
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-medium">{bucket.name}</span>
           <div className="flex items-center gap-1.5">
-            {bucket.stale && <StaleBadge updatedAt={new Date(Date.now() - 86_400_000)} />}
+            {bucket.stale && <Badge variant="warning">stale</Badge>}
             {bucket.driftFlag && (
               <span title="Allocation has drifted more than 1.5x the band from target">
                 <AlertTriangleIcon className="size-4 text-warning" aria-hidden />
@@ -306,7 +311,7 @@ function HoldingsSection({ holdings, currency }: { holdings?: Holding[]; currenc
                   >
                     <span className="flex items-center gap-2 font-medium">
                       {h.instrument.symbol}
-                      {h.stale && <StaleBadge updatedAt={h.priceAsOf ?? new Date(Date.now() - 86_400_000)} />}
+                      {h.stale && <StaleChip asOf={h.priceAsOf} />}
                     </span>
                     <span className="text-xs text-muted-foreground">{h.instrument.name}</span>
                   </Link>
