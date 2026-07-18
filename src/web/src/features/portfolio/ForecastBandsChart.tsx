@@ -60,7 +60,7 @@ export function ForecastBandsChart({ result, currency }: { result: ForecastResul
           viewBox={`0 0 ${width} ${height}`}
           role="img"
           aria-label="Forecast bands by year"
-          className="h-64 w-full min-w-[420px]"
+          className="h-64 w-full min-w-96"
         >
           {/* gridlines */}
           {[0.25, 0.5, 0.75].map((f) => (
@@ -90,7 +90,7 @@ export function ForecastBandsChart({ result, currency }: { result: ForecastResul
               x={x(i)}
               y={height - 8}
               textAnchor="middle"
-              className="fill-current text-[11px] opacity-60"
+              className="fill-current text-xs opacity-60"
             >
               Y{i + 1}
             </text>

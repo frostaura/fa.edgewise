@@ -170,7 +170,7 @@ export default function CoachChatPage() {
           >
             <div
               className={cn(
-                'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap',
+                'max-w-4/5 rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap',
                 bubble.role === 'user'
                   ? 'bg-primary text-primary-foreground'
                   : 'border bg-background',
@@ -187,7 +187,7 @@ export default function CoachChatPage() {
             {bubble.role === 'assistant' && bubble.tools.length > 0 && (
               <div className="flex flex-wrap gap-1" aria-label="Data used">
                 {bubble.tools.map((tool) => (
-                  <Badge key={tool} variant="outline" className="text-[10px]">
+                  <Badge key={tool} variant="outline" className="text-xs">
                     {tool.replace(/^get_/, '').replaceAll('_', ' ')}
                   </Badge>
                 ))}

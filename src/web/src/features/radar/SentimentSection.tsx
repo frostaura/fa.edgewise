@@ -79,8 +79,8 @@ function FgMeter({ value }: { value: number }) {
         className="absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-foreground"
         style={{ left: `${clamped}%` }}
       />
-      <div className="absolute -bottom-4 left-0 text-[10px] text-muted-foreground">Fear</div>
-      <div className="absolute right-0 -bottom-4 text-[10px] text-muted-foreground">Greed</div>
+      <div className="absolute -bottom-4 left-0 text-xs text-muted-foreground">Fear</div>
+      <div className="absolute right-0 -bottom-4 text-xs text-muted-foreground">Greed</div>
     </div>
   )
 }
