@@ -192,7 +192,7 @@ export default function JournalPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Select value={status} onValueChange={(v) => (setStatus(v), setPage(1))}>
+            <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1) }}>
               <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -202,7 +202,7 @@ export default function JournalPage() {
                 <SelectItem value="closed">Closed</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={hasPlan} onValueChange={(v) => (setHasPlan(v), setPage(1))}>
+            <Select value={hasPlan} onValueChange={(v) => { setHasPlan(v); setPage(1) }}>
               <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -212,7 +212,7 @@ export default function JournalPage() {
                 <SelectItem value="no">Unplanned</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={grade} onValueChange={(v) => (setGrade(v), setPage(1))}>
+            <Select value={grade} onValueChange={(v) => { setGrade(v); setPage(1) }}>
               <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -225,7 +225,7 @@ export default function JournalPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={emotion} onValueChange={(v) => (setEmotion(v), setPage(1))}>
+            <Select value={emotion} onValueChange={(v) => { setEmotion(v); setPage(1) }}>
               <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -239,7 +239,7 @@ export default function JournalPage() {
               </SelectContent>
             </Select>
             <Label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Switch checked={paperOnly} onCheckedChange={(v) => (setPaperOnly(v), setPage(1))} />
+              <Switch checked={paperOnly} onCheckedChange={(v) => { setPaperOnly(v); setPage(1) }} />
               Paper only
             </Label>
           </div>
