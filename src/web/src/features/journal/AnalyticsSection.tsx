@@ -241,9 +241,7 @@ export function AnalyticsSection({ isPaper }: { isPaper?: boolean }) {
                       style={{ height: `${Math.max(4, (bin.count / maxBin) * 100)}%` }}
                       title={`${bin.from}R to ${bin.to}R: ${bin.count}`}
                     />
-                    <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {bin.from}
-                    </span>
+                    <span className="text-xs text-muted-foreground tabular-nums">{bin.from}</span>
                   </div>
                 ))}
               </div>
