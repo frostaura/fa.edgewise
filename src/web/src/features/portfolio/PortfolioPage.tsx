@@ -345,9 +345,7 @@ function HoldingsSection({ holdings, currency }: { holdings?: Holding[]; currenc
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 font-medium">
                     {h.instrument.symbol}
-                    {h.stale && (
-                      <StaleBadge updatedAt={h.priceAsOf ?? new Date(Date.now() - 86_400_000)} />
-                    )}
+                    {h.stale && <StaleChip asOf={h.priceAsOf} />}
                   </span>
                   <span className="font-medium tabular-nums">{formatMinor(h.valueMinor, currency)}</span>
                 </div>

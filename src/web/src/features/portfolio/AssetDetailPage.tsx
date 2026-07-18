@@ -86,9 +86,12 @@ export default function AssetDetailPage() {
               {primary.price.toLocaleString()} {primary.instrument.currency}
             </span>
           )}
-          {primary.stale && (
-            <StaleBadge updatedAt={primary.priceAsOf ?? new Date(Date.now() - 86_400_000)} />
-          )}
+          {primary.stale &&
+            (primary.priceAsOf ? (
+              <StaleBadge updatedAt={primary.priceAsOf} />
+            ) : (
+              <Badge variant="warning">stale</Badge>
+            ))}
           </div>
         }
       />
