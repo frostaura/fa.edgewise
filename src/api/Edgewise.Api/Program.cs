@@ -133,6 +133,18 @@ if (config["EDGEWISE_SKIP_MIGRATE"] != "1")
     builder.Services.AddHostedService<MigrateAndSeedHostedService>();
 }
 
+// ---------------------------------------------------------- service modules
+// Feature service registrations are discovered, never added here directly.
+var moduleAssemblies = new[] { typeof(Program).Assembly, typeof(EdgewiseDbContext).Assembly };
+foreach (var moduleType in moduleAssemblies
+    .SelectMany(assembly => assembly.GetTypes())
+    .Where(type => type is { IsAbstract: false, IsInterface: false }
+        && typeof(Edgewise.Infrastructure.IServiceModule).IsAssignableFrom(type)))
+{
+    var module = (Edgewise.Infrastructure.IServiceModule)Activator.CreateInstance(moduleType)!;
+    module.Configure(builder.Services, config);
+}
+
 var app = builder.Build();
 
 app.UseForwardedHeaders();
@@ -156,12 +168,35 @@ app.MapGet("/health", async (EdgewiseDbContext db, CancellationToken ct) =>
 AuthEndpoints.Map(app);
 MeEndpoints.Map(app);
 
+// Feature endpoint groups implement IEndpointModule and are discovered here.
+foreach (var endpointModuleType in typeof(Program).Assembly.GetTypes()
+    .Where(type => type is { IsAbstract: false, IsInterface: false }
+        && typeof(IEndpointModule).IsAssignableFrom(type)))
+{
+    var endpointModule = (IEndpointModule)Activator.CreateInstance(endpointModuleType)!;
+    endpointModule.Map(app);
+}
+
 if (hangfireEnabled)
 {
     app.UseHangfireDashboard("/hangfire", new DashboardOptions
     {
         Authorization = [new HangfireDashboardAdminFilter()],
     });
+
+    // Recurring jobs are registered by discovered IRecurringJobRegistrar
+    // implementations (constructor injection supported).
+    using var jobScope = app.Services.CreateScope();
+    var jobManager = jobScope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+    foreach (var registrarType in moduleAssemblies
+        .SelectMany(assembly => assembly.GetTypes())
+        .Where(type => type is { IsAbstract: false, IsInterface: false }
+            && typeof(Edgewise.Infrastructure.IRecurringJobRegistrar).IsAssignableFrom(type)))
+    {
+        var registrar = (Edgewise.Infrastructure.IRecurringJobRegistrar)
+            ActivatorUtilities.CreateInstance(jobScope.ServiceProvider, registrarType);
+        registrar.Register(jobManager);
+    }
 }
 
 app.Run();
