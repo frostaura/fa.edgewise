@@ -2,7 +2,8 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { CockpitStatus } from '@/api/cockpitApi'
-import { StatusCards, buildReadCards } from '@/features/cockpit/StatusCards'
+import { StatusCards } from '@/features/cockpit/StatusCards'
+import { buildReadCards } from '@/features/cockpit/readCards'
 import {
   canSubmitOverride,
   initialOverrideFlow,
