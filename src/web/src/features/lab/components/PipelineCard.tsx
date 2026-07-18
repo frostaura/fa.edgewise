@@ -133,7 +133,7 @@ export function PipelineCard({ pipeline }: { pipeline: Pipeline }) {
           )}
           {backStates.length > 0 && (
             <Select onValueChange={(v) => setConfirmTarget(v as StrategyState)}>
-              <SelectTrigger size="sm" className="w-40">
+              <SelectTrigger className="w-40">
                 <SelectValue placeholder="Move back to…" />
               </SelectTrigger>
               <SelectContent>
