@@ -78,9 +78,12 @@ public sealed record PlanLookupsDto(
     IReadOnlyList<PlanTemplateDto> Templates,
     IReadOnlyList<InstrumentSummaryDto> Instruments,
     IReadOnlyList<BucketSummaryDto> Buckets,
-    IReadOnlyList<RiskProfileSummaryDto> RiskProfiles);
+    IReadOnlyList<RiskProfileSummaryDto> RiskProfiles,
+    IReadOnlyList<AccountSummaryDto> Accounts);
 
 public sealed record BucketSummaryDto(Guid Id, string Name, BucketKind Kind, string Currency);
+
+public sealed record AccountSummaryDto(Guid Id, string Name, Venue Venue, Guid BucketId);
 
 public sealed record RiskProfileSummaryDto(Guid Id, string Name, decimal RiskPct, decimal HeatCapPct, bool IsActive);
 

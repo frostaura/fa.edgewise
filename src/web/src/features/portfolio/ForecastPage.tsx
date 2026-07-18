@@ -167,7 +167,7 @@ export default function ForecastPage() {
           <div className="flex items-center gap-2">
             {forecasts.length > 0 && (
               <Select value={selectedId} onValueChange={loadForecast}>
-                <SelectTrigger className="w-44" size="sm">
+                <SelectTrigger className="w-44">
                   <SelectValue placeholder="Load forecast…" />
                 </SelectTrigger>
                 <SelectContent>

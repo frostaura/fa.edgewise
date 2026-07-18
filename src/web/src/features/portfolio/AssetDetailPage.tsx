@@ -38,7 +38,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { formatMinor, formatMinorSigned, formatPct, formatPctSigned, signTone } from './lib/money'
 
-const barTime = (ts: string): Time => Math.floor(Date.parse(ts) / 1000) as Time
+const barTime = (ts: string): number => Math.floor(Date.parse(ts) / 1000)
+const markerTime = (ts: string): Time => barTime(ts) as Time
 
 export default function AssetDetailPage() {
   const { instrumentId = '' } = useParams<{ instrumentId: string }>()
@@ -152,7 +153,7 @@ function PriceSection({ instrumentId }: { instrumentId: string }) {
     .flatMap((t) => {
       const list: SeriesMarker<Time>[] = [
         {
-          time: barTime(t.openedAt),
+          time: markerTime(t.openedAt),
           position: t.direction === 'long' ? 'belowBar' : 'aboveBar',
           color: t.direction === 'long' ? '#2f9e8f' : '#e2704a',
           shape: t.direction === 'long' ? 'arrowUp' : 'arrowDown',
@@ -161,7 +162,7 @@ function PriceSection({ instrumentId }: { instrumentId: string }) {
       ]
       if (t.closedAt) {
         list.push({
-          time: barTime(t.closedAt),
+          time: markerTime(t.closedAt),
           position: 'aboveBar',
           color: '#8290a5',
           shape: 'circle',
