@@ -55,7 +55,7 @@ export function CommandPalette() {
             New Plan
             <CommandShortcut>P</CommandShortcut>
           </CommandItem>
-          <CommandItem onSelect={() => stub('Quick Log')}>
+          <CommandItem onSelect={() => go('/journal?quicklog=1')}>
             <ZapIcon aria-hidden />
             Quick Log
           </CommandItem>

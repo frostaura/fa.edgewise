@@ -3,7 +3,11 @@ import { Link } from 'react-router'
 import { ArrowLeftIcon, CheckCircle2Icon, FileUpIcon, UploadIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { useImportCommitMutation, useImportPreviewMutation } from '@/api/journalApi'
+import {
+  useGetPlanLookupsQuery,
+  useImportCommitMutation,
+  useImportPreviewMutation,
+} from '@/api/journalApi'
 import { getApiErrorMessage } from '@/api/types'
 import { PageHeader } from '@/components/domain/PageHeader'
 import { Badge } from '@/components/ui/badge'
@@ -53,6 +57,7 @@ export default function ImportPage() {
   const [state, dispatch] = React.useReducer(importWizardReducer, initialWizardState)
   const [preview, { isLoading: previewing }] = useImportPreviewMutation()
   const [commit, { isLoading: committing, data: result }] = useImportCommitMutation()
+  const { data: lookups } = useGetPlanLookupsQuery()
   const [accountId, setAccountId] = React.useState('')
   const [dragOver, setDragOver] = React.useState(false)
   const inputRef = React.useRef<HTMLInputElement>(null)
@@ -257,16 +262,30 @@ export default function ImportPage() {
 
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
-              <Label htmlFor="import-account" className="text-xs">
-                Account id <span className="text-destructive">*</span>
+              <Label className="text-xs">
+                Account <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="import-account"
-                className="h-9 w-72 font-mono text-xs"
-                placeholder="account UUID these fills belong to"
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-              />
+              {lookups && lookups.accounts.length > 0 ? (
+                <Select value={accountId} onValueChange={setAccountId}>
+                  <SelectTrigger className="h-9 w-72">
+                    <SelectValue placeholder="Which account are these fills from?" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lookups.accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name} ({account.venue})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  className="h-9 w-72 font-mono text-xs"
+                  placeholder="account id these fills belong to"
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                />
+              )}
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="import-save-as" className="text-xs">

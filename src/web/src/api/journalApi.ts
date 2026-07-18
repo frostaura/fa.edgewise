@@ -99,11 +99,19 @@ export interface RiskProfileSummary {
   isActive: boolean
 }
 
+export interface AccountSummary {
+  id: string
+  name: string
+  venue: string
+  bucketId: string
+}
+
 export interface PlanLookups {
   templates: PlanTemplate[]
   instruments: InstrumentSummary[]
   buckets: BucketSummary[]
   riskProfiles: RiskProfileSummary[]
+  accounts: AccountSummary[]
 }
 
 export interface TradeListItem {

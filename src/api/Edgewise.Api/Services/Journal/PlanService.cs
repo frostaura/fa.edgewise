@@ -366,12 +366,14 @@ public sealed class PlanService(EdgewiseDbContext db, ICurrentUser currentUser, 
             .ToListAsync(ct);
         var buckets = await db.Buckets.AsNoTracking().OrderBy(b => b.Name).ToListAsync(ct);
         var profiles = await db.RiskProfiles.AsNoTracking().OrderBy(r => r.Name).ToListAsync(ct);
+        var accounts = await db.Accounts.AsNoTracking().OrderBy(a => a.Name).ToListAsync(ct);
 
         return new PlanLookupsDto(
             templates,
             instruments.Select(JournalCommon.ToSummary).ToList(),
             buckets.Select(b => new BucketSummaryDto(b.Id, b.Name, b.Kind, b.Currency)).ToList(),
-            profiles.Select(r => new RiskProfileSummaryDto(r.Id, r.Name, r.RiskPct, r.HeatCapPct, r.IsActive)).ToList());
+            profiles.Select(r => new RiskProfileSummaryDto(r.Id, r.Name, r.RiskPct, r.HeatCapPct, r.IsActive)).ToList(),
+            accounts.Select(a => new AccountSummaryDto(a.Id, a.Name, a.Venue, a.BucketId)).ToList());
     }
 
     /// <summary>Fallback instrument creation for symbols the catalogue does not know yet.</summary>
