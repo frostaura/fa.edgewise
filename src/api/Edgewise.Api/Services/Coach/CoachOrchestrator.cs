@@ -27,7 +27,7 @@ public sealed class CoachOrchestrator(EdgewiseDbContext db, LlmGateway gateway)
     private readonly EdgewiseDbContext _db = db;
     private readonly LlmGateway _gateway = gateway;
 
-    private static readonly string SystemPrompt = $$"""
+    private static readonly string SystemPrompt = """
         You are the Edgewise trading coach. Hard rules:
         - NEVER advise, recommend or instruct any market action. No buy/sell/enter/exit/add/close
           instructions, ever. You review the trader's process; you do not make trade calls.
