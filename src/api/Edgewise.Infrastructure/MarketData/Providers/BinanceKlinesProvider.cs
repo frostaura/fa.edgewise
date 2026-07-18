@@ -72,6 +72,9 @@ public sealed class BinanceKlinesProvider(ProviderHttp http) : IBarProvider, IQu
         return ParseDecimal(doc.RootElement.GetProperty("price"));
     }
 
+    private static long ToUnixMs(DateTime utc) =>
+        new DateTimeOffset(DateTime.SpecifyKind(utc, DateTimeKind.Utc)).ToUnixTimeMilliseconds();
+
     private static decimal ParseDecimal(JsonElement element) =>
         element.ValueKind == JsonValueKind.Number
             ? element.GetDecimal()
