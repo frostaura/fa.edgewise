@@ -54,6 +54,18 @@ builder.Services.AddSingleton<TotpService>();
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<AuthService>();
 
+// ------------------------------------------------------------- MCP server
+// Agent-facing tool surface (journal, analytics, portfolio, market data) over
+// streamable HTTP; the endpoint itself is mapped below ahead of the hangfire
+// block. Tools resolve scoped services per request, so the per-user query
+// filters apply exactly as they do on the REST surface.
+builder.Services.AddMcpServer()
+    .WithHttpTransport()
+    .WithTools<Edgewise.Api.Mcp.JournalTools>()
+    .WithTools<Edgewise.Api.Mcp.AnalyticsTools>()
+    .WithTools<Edgewise.Api.Mcp.PortfolioTools>()
+    .WithTools<Edgewise.Api.Mcp.MarketTools>();
+
 // ------------------------------------------------------------------- auth
 // "Smart" selects the PAT handler for ew_* bearer tokens, JWT otherwise.
 builder.Services
@@ -176,6 +188,11 @@ foreach (var endpointModuleType in typeof(Program).Assembly.GetTypes()
     var endpointModule = (IEndpointModule)Activator.CreateInstance(endpointModuleType)!;
     endpointModule.Map(app);
 }
+
+// ------------------------------------------------------------ MCP endpoint
+// Same "Smart" (JWT-or-PAT) authentication as the REST surface: agents connect
+// with "Authorization: Bearer <jwt|ew_...>" and only ever see their own rows.
+app.MapMcp("/mcp").RequireAuthorization();
 
 if (hangfireEnabled)
 {

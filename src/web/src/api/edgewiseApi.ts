@@ -63,6 +63,8 @@ export const edgewiseApi = createApi({
     'Forecast',
     'WeeklyReview',
     'Account',
+    'Me',
+    'ApiToken',
   ],
   endpoints: () => ({}),
 })

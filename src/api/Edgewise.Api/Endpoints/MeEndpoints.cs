@@ -3,9 +3,12 @@ using Edgewise.Contracts.Me;
 using Edgewise.Domain.Entities;
 using Edgewise.Infrastructure.Auth;
 using Edgewise.Infrastructure.Data;
+using Edgewise.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace Edgewise.Api.Endpoints;
+
+public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 public static class MeEndpoints
 {
@@ -15,6 +18,7 @@ public static class MeEndpoints
 
         group.MapGet("/", GetMe);
         group.MapPatch("/", PatchMe);
+        group.MapPost("/password", ChangePassword);
         group.MapGet("/tokens", ListTokens);
         group.MapPost("/tokens", CreateToken);
         group.MapDelete("/tokens/{id:guid}", DeleteToken);
@@ -72,6 +76,42 @@ public static class MeEndpoints
 
         await db.SaveChangesAsync(ct);
         return Results.Ok(AuthEndpoints.ToDto(user));
+    }
+
+    /// <summary>
+    /// Verifies the current password, rehashes the new one and revokes EVERY
+    /// refresh token — all devices (including this one) must log in again.
+    /// </summary>
+    private static async Task<IResult> ChangePassword(
+        ChangePasswordRequest request, EdgewiseDbContext db, CancellationToken ct)
+    {
+        var user = await RequireCurrentUserAsync(db, ct);
+
+        if (string.IsNullOrEmpty(request.CurrentPassword)
+            || !PasswordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            throw ApiException.Unauthorized("invalid_current_password", "The current password is incorrect.");
+        }
+
+        if (string.IsNullOrEmpty(request.NewPassword) || request.NewPassword.Length < 8)
+        {
+            throw ApiException.BadRequest("weak_password", "Password must be at least 8 characters.");
+        }
+
+        if (request.NewPassword.Length > 256)
+        {
+            throw ApiException.BadRequest("invalid_password", "Password must be at most 256 characters.");
+        }
+
+        user.PasswordHash = PasswordHasher.Hash(request.NewPassword);
+        await db.SaveChangesAsync(ct);
+
+        // The global filter scopes RefreshTokens to the current user.
+        await db.RefreshTokens
+            .Where(t => t.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, DateTime.UtcNow), ct);
+
+        return Results.NoContent();
     }
 
     private static async Task<IResult> ListTokens(ICurrentUser currentUser, AuthService auth, CancellationToken ct)
