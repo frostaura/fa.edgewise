@@ -3,12 +3,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 
 export type AdherenceGrade = 'A' | 'B' | 'C' | 'D' | 'F'
 
-/** Map a 0–100 adherence score to a letter grade. */
+/** Map a 0–100 adherence score to a letter grade (rubric v1: A≥90 B≥75 C≥60 D≥40). */
 export function adherenceGrade(score: number): AdherenceGrade {
   if (score >= 90) return 'A'
-  if (score >= 80) return 'B'
-  if (score >= 70) return 'C'
-  if (score >= 60) return 'D'
+  if (score >= 75) return 'B'
+  if (score >= 60) return 'C'
+  if (score >= 40) return 'D'
   return 'F'
 }
 

@@ -87,22 +87,17 @@ public sealed class CoachChatService(EdgewiseDbContext db, LlmGateway gateway)
                 break;
             }
 
-            var toolResults = new JsonArray();
+            var toolResults = new List<LlmToolResult>();
             foreach (var call in result.ToolCalls)
             {
                 usedTools.Add(call.Name);
                 await EmitAsync(response, new { type = "tool", name = call.Name }, ct);
                 var toolOutput = await tools.ExecuteAsync(call.Name, call.InputJson, ct);
-                toolResults.Add(new JsonObject
-                {
-                    ["type"] = "tool_result",
-                    ["tool_use_id"] = call.Id,
-                    ["content"] = toolOutput,
-                });
+                toolResults.Add(new LlmToolResult(call.Id, toolOutput));
             }
 
-            messages.Add(new LlmMessage { Role = "assistant", ContentBlocks = result.RawContent });
-            messages.Add(new LlmMessage { Role = "user", ContentBlocks = toolResults });
+            messages.Add(new LlmMessage { Role = "assistant", Text = result.Text, ToolCalls = result.ToolCalls });
+            messages.Add(new LlmMessage { Role = "user", ToolResults = toolResults });
         }
 
         var answer = result?.Text.Trim() ?? string.Empty;

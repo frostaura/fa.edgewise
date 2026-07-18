@@ -4,8 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Edgewise.Infrastructure.Llm;
 
 /// <summary>
-/// Registers the LLM gateway. ILlmProvider is AnthropicProvider when ANTHROPIC_API_KEY is
-/// present, NullLlmProvider otherwise (deterministic-only mode).
+/// Registers the LLM gateway. Provider selection: OPENROUTER_API_KEY → OpenRouterProvider
+/// (provider of choice); else ANTHROPIC_API_KEY → AnthropicProvider (secondary); else
+/// NullLlmProvider (deterministic-only degradation).
 /// </summary>
 public sealed class LlmServiceModule : IServiceModule
 {
@@ -14,7 +15,11 @@ public sealed class LlmServiceModule : IServiceModule
         var options = LlmOptions.From(config);
         services.AddSingleton(options);
 
-        if (options.HasApiKey)
+        if (options.HasOpenRouterKey)
+        {
+            services.AddSingleton<ILlmProvider>(new OpenRouterProvider(options));
+        }
+        else if (options.HasAnthropicKey)
         {
             services.AddSingleton<ILlmProvider>(new AnthropicProvider(options));
         }

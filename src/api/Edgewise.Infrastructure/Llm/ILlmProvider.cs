@@ -13,8 +13,8 @@ public interface ILlmProvider
 }
 
 /// <summary>
-/// Selected when no ANTHROPIC_API_KEY is present. Returns an offline marker so orchestrators
-/// emit deterministic-only insights instead of calling out.
+/// Selected when neither OPENROUTER_API_KEY nor ANTHROPIC_API_KEY is present. Returns an
+/// offline marker so orchestrators emit deterministic-only insights instead of calling out.
 /// </summary>
 public sealed class NullLlmProvider : ILlmProvider
 {

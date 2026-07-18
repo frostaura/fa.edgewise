@@ -8,9 +8,11 @@ using Polly.Retry;
 namespace Edgewise.Infrastructure.Llm;
 
 /// <summary>
-/// Raw-HTTP Anthropic Messages API client (POST https://api.anthropic.com/v1/messages).
-/// Retries 429/5xx three times with exponential backoff (Polly). Supports plain text and
-/// tool-use requests; parses text blocks, tool_use blocks and usage token counts.
+/// Secondary provider: raw-HTTP Anthropic Messages API client
+/// (POST https://api.anthropic.com/v1/messages). Used when ANTHROPIC_API_KEY is configured
+/// but no OPENROUTER_API_KEY is. Retries 429/5xx three times with exponential backoff.
+/// OpenRouter-style model slugs ("anthropic/claude-haiku-4.5") are mapped to native
+/// Anthropic aliases ("claude-haiku-4-5") so shared config keeps working.
 /// </summary>
 public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
 {
@@ -27,12 +29,20 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
 
     private readonly LlmOptions _options = options;
 
-    public bool IsConfigured => _options.HasApiKey;
+    public bool IsConfigured => _options.HasAnthropicKey;
     public string Name => "anthropic";
+
+    /// <summary>"anthropic/claude-haiku-4.5" → "claude-haiku-4-5"; native ids pass through.</summary>
+    public static string NormalizeModel(string model)
+    {
+        var slash = model.IndexOf('/');
+        var bare = slash >= 0 ? model[(slash + 1)..] : model;
+        return bare.Replace('.', '-');
+    }
 
     public async Task<LlmResult> CompleteAsync(LlmRequest req, CancellationToken ct)
     {
-        if (!_options.HasApiKey)
+        if (!_options.HasAnthropicKey)
         {
             return new LlmResult { IsOffline = true };
         }
@@ -45,7 +55,7 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
             response = await RetryPolicy.ExecuteAsync(async token =>
             {
                 using var message = new HttpRequestMessage(HttpMethod.Post, Endpoint);
-                message.Headers.Add("x-api-key", _options.ApiKey);
+                message.Headers.Add("x-api-key", _options.AnthropicApiKey);
                 message.Headers.Add("anthropic-version", ApiVersion);
                 message.Content = new StringContent(body, Encoding.UTF8, "application/json");
                 return await Http.SendAsync(message, token);
@@ -75,15 +85,57 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
         var messages = new JsonArray();
         foreach (var m in req.Messages)
         {
-            var content = m.ContentBlocks is not null
-                ? m.ContentBlocks.DeepClone()
-                : JsonValue.Create(m.Text ?? string.Empty);
+            JsonNode content;
+            if (m.ToolResults is { Count: > 0 })
+            {
+                var blocks = new JsonArray();
+                foreach (var result in m.ToolResults)
+                {
+                    blocks.Add(new JsonObject
+                    {
+                        ["type"] = "tool_result",
+                        ["tool_use_id"] = result.CallId,
+                        ["content"] = result.Content,
+                    });
+                }
+
+                content = blocks;
+                messages.Add(new JsonObject { ["role"] = "user", ["content"] = content });
+                continue;
+            }
+
+            if (m.ToolCalls is { Count: > 0 })
+            {
+                var blocks = new JsonArray();
+                if (!string.IsNullOrEmpty(m.Text))
+                {
+                    blocks.Add(new JsonObject { ["type"] = "text", ["text"] = m.Text });
+                }
+
+                foreach (var call in m.ToolCalls)
+                {
+                    blocks.Add(new JsonObject
+                    {
+                        ["type"] = "tool_use",
+                        ["id"] = call.Id,
+                        ["name"] = call.Name,
+                        ["input"] = ParseOrEmpty(call.InputJson),
+                    });
+                }
+
+                content = blocks;
+            }
+            else
+            {
+                content = JsonValue.Create(m.Text ?? string.Empty);
+            }
+
             messages.Add(new JsonObject { ["role"] = m.Role, ["content"] = content });
         }
 
         var body = new JsonObject
         {
-            ["model"] = req.Model,
+            ["model"] = NormalizeModel(req.Model),
             ["max_tokens"] = req.MaxTokens,
             ["messages"] = messages,
         };
@@ -119,6 +171,18 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
         return body.ToJsonString();
     }
 
+    private static JsonNode ParseOrEmpty(string json)
+    {
+        try
+        {
+            return JsonNode.Parse(json) ?? new JsonObject();
+        }
+        catch (JsonException)
+        {
+            return new JsonObject();
+        }
+    }
+
     private static LlmResult ParseResponse(string payload)
     {
         JsonNode? root;
@@ -138,8 +202,7 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
 
         var text = new StringBuilder();
         var toolCalls = new List<LlmToolCall>();
-        var content = obj["content"] as JsonArray;
-        if (content is not null)
+        if (obj["content"] is JsonArray content)
         {
             foreach (var block in content)
             {
@@ -155,7 +218,7 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
                             Name = block["name"]?.GetValue<string>() ?? string.Empty,
                             InputJson = block["input"]?.ToJsonString() ?? "{}",
                         });
-                        break;
+                    break;
                 }
             }
         }
@@ -169,7 +232,6 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
             TokensIn = usage?["input_tokens"]?.GetValue<int>() ?? 0,
             TokensOut = usage?["output_tokens"]?.GetValue<int>() ?? 0,
             Model = obj["model"]?.GetValue<string>() ?? string.Empty,
-            RawContent = content?.DeepClone(),
         };
     }
 }

@@ -3,23 +3,27 @@ using Microsoft.Extensions.Configuration;
 namespace Edgewise.Infrastructure.Llm;
 
 /// <summary>
-/// LLM configuration. The API key comes from the ANTHROPIC_API_KEY environment variable
-/// (or Llm:ApiKey); model ids from Llm:SmallModel / Llm:LargeModel with sensible defaults.
+/// LLM configuration. OpenRouter is the provider of choice (OPENROUTER_API_KEY); the direct
+/// Anthropic API is a secondary fallback (ANTHROPIC_API_KEY). Model ids come from
+/// Llm:SmallModel / Llm:LargeModel and default to OpenRouter slugs.
 /// </summary>
 public sealed class LlmOptions
 {
-    public const string DefaultSmallModel = "claude-haiku-4-5-20251001";
-    public const string DefaultLargeModel = "claude-sonnet-5";
+    public const string DefaultSmallModel = "anthropic/claude-haiku-4.5";
+    public const string DefaultLargeModel = "anthropic/claude-sonnet-4.5";
 
-    public string? ApiKey { get; init; }
+    public string? OpenRouterApiKey { get; init; }
+    public string? AnthropicApiKey { get; init; }
     public string SmallModel { get; init; } = DefaultSmallModel;
     public string LargeModel { get; init; } = DefaultLargeModel;
 
-    public bool HasApiKey => !string.IsNullOrWhiteSpace(ApiKey);
+    public bool HasOpenRouterKey => !string.IsNullOrWhiteSpace(OpenRouterApiKey);
+    public bool HasAnthropicKey => !string.IsNullOrWhiteSpace(AnthropicApiKey);
 
     public static LlmOptions From(IConfiguration config) => new()
     {
-        ApiKey = config["ANTHROPIC_API_KEY"] ?? config["Llm:ApiKey"],
+        OpenRouterApiKey = config["OPENROUTER_API_KEY"] ?? config["Llm:OpenRouterApiKey"],
+        AnthropicApiKey = config["ANTHROPIC_API_KEY"] ?? config["Llm:ApiKey"],
         SmallModel = config["Llm:SmallModel"] ?? DefaultSmallModel,
         LargeModel = config["Llm:LargeModel"] ?? DefaultLargeModel,
     };
