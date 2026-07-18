@@ -34,9 +34,10 @@ Each publish pushes multi-arch (`linux/amd64`, `linux/arm64`) images tagged
 | `POSTGRES_PASSWORD` | yes | `openssl rand -base64 24` |
 | `EDGEWISE_JWT_SECRET` | yes | `openssl rand -base64 48` |
 | `EDGEWISE_ENCRYPTION_KEY` | yes — exactly 32 bytes base64 | `openssl rand -base64 32` |
-| `ANTHROPIC_API_KEY` | optional (Coach) | console.anthropic.com |
+| `OPENROUTER_API_KEY` | optional (Coach — provider of choice) | openrouter.ai/keys |
+| `ANTHROPIC_API_KEY` | optional (Coach fallback provider) | console.anthropic.com |
 | `EDGEWISE_VAPID_PUBLIC_KEY` / `EDGEWISE_VAPID_PRIVATE_KEY` / `EDGEWISE_VAPID_SUBJECT` | optional (push) | `npx web-push generate-vapid-keys`; subject is `mailto:you@example.com` |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | optional (email) | your mail provider |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` | optional (email) | GoDaddy Workspace Email: `smtpout.secureserver.net:587` (STARTTLS) or `:465` (SSL), user = full mailbox address on your domain; GoDaddy M365 mailboxes: `smtp.office365.com:587` |
 | `DOCKERHUB_USERNAME` | optional (default `frostaura`) | — |
 | `EDGEWISE_TAG` | optional (default `latest`) | a commit SHA to pin |
 | `EDGEWISE_PORT` | optional (default `8080`) | — |
