@@ -5,13 +5,13 @@ import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { makeStore } from '@/app/store'
+import { IntegrationsSection } from '@/features/settings/IntegrationsSection'
 import {
-  IntegrationsSection,
   backfillProgress,
   isValidWalletAddress,
   maskKeyLastFour,
   validateConnectForm,
-} from '@/features/settings/IntegrationsSection'
+} from '@/features/settings/integrationsLogic'
 
 describe('masked display logic', () => {
   it('masks a stored key down to its last four characters', () => {

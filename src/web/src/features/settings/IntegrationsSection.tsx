@@ -380,16 +380,11 @@ function CoinbaseConnectCard() {
 // ------------------------------------------------------------- section
 
 export function IntegrationsSection() {
-  const [polling, setPolling] = useState(false)
-  const { data: accounts, isLoading } = useGetAccountsQuery(undefined, {
-    pollingInterval: polling ? 2500 : 0,
-  })
-
-  const anySyncing = useMemo(
-    () => (accounts ?? []).some((a) => a.lastSyncStats?.syncing),
-    [accounts],
-  )
-  useEffect(() => setPolling(anySyncing), [anySyncing])
+  const { data: accounts, isLoading } = useGetAccountsQuery()
+  const anySyncing = (accounts ?? []).some((a) => a.lastSyncStats?.syncing)
+  // A second, poll-only subscription: RTKQ applies the shortest interval among
+  // subscribers, so the list refreshes while any account is mid-sync.
+  useGetAccountsQuery(undefined, { pollingInterval: 2500, skip: !anySyncing })
 
   const exchangeAccounts = (accounts ?? []).filter((a) =>
     ['polymarket', 'binance', 'coinbase'].includes(a.venue),
