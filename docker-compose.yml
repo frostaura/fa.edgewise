@@ -1,0 +1,61 @@
+# Edgewise — Portainer stack file (pull-only; images are published by CI).
+# See docs/deployment-portainer.md for the full walkthrough and .env.example
+# for every variable with generation commands.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: edgewise
+      POSTGRES_USER: edgewise
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - edgewise-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edgewise -d edgewise"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    image: ${DOCKERHUB_USERNAME:-frostaura}/edgewise-api:${EDGEWISE_TAG:-latest}
+    environment:
+      TZ: ${TZ:-Africa/Johannesburg}
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=edgewise;Username=edgewise;Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}"
+      EDGEWISE_JWT_SECRET: ${EDGEWISE_JWT_SECRET:?EDGEWISE_JWT_SECRET is required}
+      EDGEWISE_ENCRYPTION_KEY: ${EDGEWISE_ENCRYPTION_KEY:?EDGEWISE_ENCRYPTION_KEY is required}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      EDGEWISE_VAPID_PUBLIC_KEY: ${EDGEWISE_VAPID_PUBLIC_KEY:-}
+      EDGEWISE_VAPID_PRIVATE_KEY: ${EDGEWISE_VAPID_PRIVATE_KEY:-}
+      EDGEWISE_VAPID_SUBJECT: ${EDGEWISE_VAPID_SUBJECT:-}
+      Smtp__Host: ${SMTP_HOST:-}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__User: ${SMTP_USER:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__From: ${SMTP_FROM:-}
+    volumes:
+      - edgewise-data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  web:
+    image: ${DOCKERHUB_USERNAME:-frostaura}/edgewise-web:${EDGEWISE_TAG:-latest}
+    ports:
+      - "${EDGEWISE_PORT:-8080}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  edgewise-db:
+  edgewise-data:

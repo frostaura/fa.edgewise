@@ -29,10 +29,13 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Non-root user (the aspnet base image ships an `app` user; pin it to uid/gid 64198)
-# and the attachment storage directory.
-RUN groupmod --gid 64198 app \
-    && usermod --uid 64198 --gid 64198 app \
+# Non-root user pinned to uid/gid 64198 (repurpose the base image's `app` user
+# if present, create it otherwise) and the attachment storage directory.
+RUN if id app >/dev/null 2>&1; then \
+        groupmod --gid 64198 app && usermod --uid 64198 --gid 64198 app; \
+    else \
+        groupadd --gid 64198 app && useradd --uid 64198 --gid 64198 --create-home app; \
+    fi \
     && mkdir -p /data \
     && chown -R app:app /data /app
 
