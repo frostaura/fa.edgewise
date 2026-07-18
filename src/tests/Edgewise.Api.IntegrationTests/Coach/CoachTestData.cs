@@ -9,12 +9,24 @@ namespace Edgewise.Api.IntegrationTests.Coach;
 /// <summary>Direct-DB seeding helpers for the coach vertical tests.</summary>
 public static class CoachTestData
 {
-    /// <summary>Opens a DbContext scoped to <paramref name="userId"/> (query filters apply as that user).</summary>
-    public static EdgewiseDbContext OpenDb(TestAppFactory factory, Guid userId)
+    /// <summary>A user-scoped DbContext plus the DI scope keeping its options alive.</summary>
+    public sealed class ScopedDb(IServiceScope scope, EdgewiseDbContext db) : IAsyncDisposable
     {
-        using var scope = factory.Services.CreateScope();
+        public EdgewiseDbContext Db { get; } = db;
+
+        public async ValueTask DisposeAsync()
+        {
+            await Db.DisposeAsync();
+            scope.Dispose();
+        }
+    }
+
+    /// <summary>Opens a DbContext scoped to <paramref name="userId"/> (query filters apply as that user).</summary>
+    public static ScopedDb OpenDb(TestAppFactory factory, Guid userId)
+    {
+        var scope = factory.Services.CreateScope();
         var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<EdgewiseDbContext>>();
-        return new EdgewiseDbContext(options, new FixedCurrentUser(userId));
+        return new ScopedDb(scope, new EdgewiseDbContext(options, new FixedCurrentUser(userId)));
     }
 
     public static async Task<Instrument> SeedInstrumentAsync(EdgewiseDbContext db, string? symbol = null)
