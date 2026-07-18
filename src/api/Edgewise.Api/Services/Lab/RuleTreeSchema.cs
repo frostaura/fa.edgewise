@@ -93,7 +93,7 @@ public sealed class RuleTreeValidator
         var results = _schema.Evaluate(ruleTree, new EvaluationOptions { OutputFormat = OutputFormat.List });
         if (!results.IsValid)
         {
-            foreach (var detail in results.Details)
+            foreach (var detail in results.Details ?? [])
             {
                 if (detail.Errors is null || detail.Errors.Count == 0)
                 {
