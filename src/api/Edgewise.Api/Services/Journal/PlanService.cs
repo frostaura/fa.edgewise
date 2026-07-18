@@ -287,9 +287,9 @@ public sealed class PlanService(EdgewiseDbContext db, ICurrentUser currentUser, 
             };
             db.Trades.Add(trade);
 
-            foreach (var fill in fills)
+            for (var i = 0; i < fills.Count; i++)
             {
-                db.Fills.Add(NewManualFill(userId, fill, plan.InstrumentId, trade.Id, bucket.Currency));
+                db.Fills.Add(NewManualFill(userId, fills[i], plan.InstrumentId, trade.Id, bucket.Currency, i));
             }
         }
 
@@ -408,7 +408,8 @@ public sealed class PlanService(EdgewiseDbContext db, ICurrentUser currentUser, 
 
     // ------------------------------------------------------------ helpers
 
-    internal static Fill NewManualFill(Guid userId, PromoteFillRequest fill, Guid instrumentId, Guid? tradeId, string currency)
+    internal static Fill NewManualFill(
+        Guid userId, PromoteFillRequest fill, Guid instrumentId, Guid? tradeId, string currency, int ordinal = 0)
     {
         var at = JournalCommon.AsUtc(fill.At);
         return new Fill
@@ -425,14 +426,16 @@ public sealed class PlanService(EdgewiseDbContext db, ICurrentUser currentUser, 
             FeeCurrency = currency,
             At = at,
             Source = FillSource.Manual,
-            SourceHash = ManualSourceHash(userId, instrumentId, fill.Side, fill.Qty, fill.Price, at),
+            SourceHash = ManualSourceHash(userId, instrumentId, fill.Side, fill.Qty, fill.Price, at, ordinal),
             MatchStatus = tradeId is null ? MatchStatus.Proposed : MatchStatus.Matched,
         };
     }
 
-    internal static string ManualSourceHash(Guid userId, Guid instrumentId, FillSide side, decimal qty, decimal price, DateTime at)
+    /// <summary>Deterministic hash so an identical manual fill cannot be double-logged.</summary>
+    internal static string ManualSourceHash(
+        Guid userId, Guid instrumentId, FillSide side, decimal qty, decimal price, DateTime at, int ordinal = 0)
     {
-        var payload = $"manual|{userId}|{instrumentId}|{side}|{qty:0.##########}|{price:0.##########}|{at:O}|{Guid.NewGuid():N}";
+        var payload = $"manual|{userId}|{instrumentId}|{side}|{qty:0.##########}|{price:0.##########}|{at:O}|{ordinal}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)));
     }
 

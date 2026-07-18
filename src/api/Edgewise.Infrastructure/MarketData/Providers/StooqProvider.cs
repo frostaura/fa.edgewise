@@ -70,8 +70,7 @@ public sealed class StooqProvider(ProviderHttp http) : IBarProvider, IQuoteProvi
                 continue;
             }
 
-            var hasVolume = fields.Length > 5 && TryDecimal(fields[5], out var parsedVolume);
-            bars.Add(new ProviderBar(date, o, h, l, c, hasVolume ? ParseVolume(fields[5]) : 0m));
+            bars.Add(new ProviderBar(date, o, h, l, c, fields.Length > 5 ? ParseVolume(fields[5]) : 0m));
         }
 
         return bars;
