@@ -45,9 +45,7 @@ export function makeStore() {
       ui: uiReducer,
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware()
-        .prepend(listenerMiddleware.middleware)
-        .concat(edgewiseApi.middleware),
+      getDefaultMiddleware().prepend(listenerMiddleware.middleware).concat(edgewiseApi.middleware),
   })
   setupListeners(store.dispatch)
   return store

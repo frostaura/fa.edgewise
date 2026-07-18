@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useNavigate } from 'react-router'
 import { Loader2Icon } from 'lucide-react'
 import { z } from 'zod'
 
-import { useLoginMutation } from '@/api/authApi'
+import { useRegisterMutation } from '@/api/authApi'
 import { getApiErrorMessage } from '@/api/types'
 import { useAppSelector } from '@/app/hooks'
 import { selectIsAuthenticated } from '@/features/auth/authSlice'
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,55 +22,51 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 
-const schema = z.object({
-  email: z.email('Enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-})
+const schema = z
+  .object({
+    email: z.email('Enter a valid email address'),
+    password: z.string().min(8, 'Use at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
 
 type FormValues = z.infer<typeof schema>
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
-  const location = useLocation()
   const navigate = useNavigate()
-  const [login, { isLoading }] = useLoginMutation()
+  const [register, { isLoading }] = useRegisterMutation()
   const [apiError, setApiError] = useState<string | null>(null)
-
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: '', password: '', confirmPassword: '' },
   })
 
-  if (isAuthenticated) return <Navigate to={from} replace />
+  if (isAuthenticated) return <Navigate to="/" replace />
 
   const onSubmit = async (values: FormValues) => {
     setApiError(null)
     try {
-      const result = await login(values).unwrap()
-      if (result.requiresTotp) {
-        void navigate('/totp', { state: { from } })
-      } else {
-        void navigate(from, { replace: true })
-      }
+      await register({ email: values.email, password: values.password }).unwrap()
+      void navigate('/', { replace: true })
     } catch (err) {
-      setApiError(getApiErrorMessage(err, 'Sign in failed. Check your credentials.'))
+      setApiError(getApiErrorMessage(err, 'Registration failed. Please try again.'))
     }
   }
 
   return (
     <AuthCard
-      title="Welcome back"
-      description="Sign in to your Edgewise account."
+      title="Create your account"
+      description="Start journaling your process in minutes."
       footer={
         <span>
-          New here?{' '}
-          <Link
-            to="/register"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Create an account
+          Already have an account?{' '}
+          <Link to="/login" className="font-medium text-primary underline-offset-4 hover:underline">
+            Sign in
           </Link>
         </span>
       }
@@ -103,7 +100,21 @@ export default function LoginPage() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" autoComplete="current-password" {...field} />
+                  <Input type="password" autoComplete="new-password" {...field} />
+                </FormControl>
+                <FormDescription>At least 8 characters.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm password</FormLabel>
+                <FormControl>
+                  <Input type="password" autoComplete="new-password" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -111,7 +122,7 @@ export default function LoginPage() {
           />
           <Button type="submit" className="mt-2 w-full" disabled={isLoading}>
             {isLoading && <Loader2Icon className="animate-spin" aria-hidden />}
-            Sign in
+            Create account
           </Button>
         </form>
       </Form>

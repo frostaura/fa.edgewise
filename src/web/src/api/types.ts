@@ -20,8 +20,7 @@ export interface AuthSession extends AuthTokens {
 
 /** POST /api/auth/login — either a full session or a TOTP challenge. */
 export type LoginResponse =
-  | ({ requiresTotp: false } & AuthSession)
-  | { requiresTotp: true; totpToken: string }
+  ({ requiresTotp: false } & AuthSession) | { requiresTotp: true; totpToken: string }
 
 export interface LoginRequest {
   email: string

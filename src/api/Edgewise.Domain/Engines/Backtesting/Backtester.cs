@@ -358,99 +358,99 @@ public static class Backtester
         switch (c.Indicator)
         {
             case IndicatorKind.PriceVsMa:
-            {
-                var period = (int)Param(c, "period", 20m);
-                var sma = IndicatorLibrary.Sma(bars, period);
-                for (var i = 0; i < n; i++)
                 {
-                    if (sma[i] is decimal m && m != 0m)
+                    var period = (int)Param(c, "period", 20m);
+                    var sma = IndicatorLibrary.Sma(bars, period);
+                    for (var i = 0; i < n; i++)
                     {
-                        outp[i] = (bars[i].C - m) / m;
+                        if (sma[i] is decimal m && m != 0m)
+                        {
+                            outp[i] = (bars[i].C - m) / m;
+                        }
                     }
-                }
 
-                break;
-            }
+                    break;
+                }
 
             case IndicatorKind.RsiBand:
-            {
-                var period = (int)Param(c, "period", 14m);
-                outp = IndicatorLibrary.Rsi(bars, period);
-                break;
-            }
+                {
+                    var period = (int)Param(c, "period", 14m);
+                    outp = IndicatorLibrary.Rsi(bars, period);
+                    break;
+                }
 
             case IndicatorKind.BreakoutNBarHigh:
-            {
-                var lookback = (int)Param(c, "n", 20m);
-                if (lookback <= 0)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(c), "BreakoutNBarHigh 'n' must be positive.");
-                }
-
-                for (var i = lookback; i < n; i++)
-                {
-                    var maxHigh = decimal.MinValue;
-                    for (var j = i - lookback; j < i; j++)
+                    var lookback = (int)Param(c, "n", 20m);
+                    if (lookback <= 0)
                     {
-                        maxHigh = Math.Max(maxHigh, bars[j].H);
+                        throw new ArgumentOutOfRangeException(nameof(c), "BreakoutNBarHigh 'n' must be positive.");
                     }
 
-                    if (maxHigh != 0m)
+                    for (var i = lookback; i < n; i++)
                     {
-                        outp[i] = (bars[i].C - maxHigh) / maxHigh;
-                    }
-                }
+                        var maxHigh = decimal.MinValue;
+                        for (var j = i - lookback; j < i; j++)
+                        {
+                            maxHigh = Math.Max(maxHigh, bars[j].H);
+                        }
 
-                break;
-            }
+                        if (maxHigh != 0m)
+                        {
+                            outp[i] = (bars[i].C - maxHigh) / maxHigh;
+                        }
+                    }
+
+                    break;
+                }
 
             case IndicatorKind.VolumeVsAvg:
-            {
-                var period = (int)Param(c, "period", 20m);
-                var vols = new decimal[n];
-                for (var i = 0; i < n; i++)
                 {
-                    vols[i] = bars[i].V;
-                }
-
-                var avg = IndicatorLibrary.SmaOf(vols, period);
-                for (var i = 0; i < n; i++)
-                {
-                    if (avg[i] is decimal a && a != 0m)
+                    var period = (int)Param(c, "period", 20m);
+                    var vols = new decimal[n];
+                    for (var i = 0; i < n; i++)
                     {
-                        outp[i] = bars[i].V / a;
+                        vols[i] = bars[i].V;
                     }
-                }
 
-                break;
-            }
+                    var avg = IndicatorLibrary.SmaOf(vols, period);
+                    for (var i = 0; i < n; i++)
+                    {
+                        if (avg[i] is decimal a && a != 0m)
+                        {
+                            outp[i] = bars[i].V / a;
+                        }
+                    }
+
+                    break;
+                }
 
             case IndicatorKind.MacdCross:
-            {
-                var fast = (int)Param(c, "fast", 12m);
-                var slow = (int)Param(c, "slow", 26m);
-                var signal = (int)Param(c, "signal", 9m);
-                var (_, _, hist) = IndicatorLibrary.Macd(bars, fast, slow, signal);
-                outp = hist;
-                break;
-            }
-
-            case IndicatorKind.PriceVsBollinger:
-            {
-                var period = (int)Param(c, "period", 20m);
-                var sd = Param(c, "sd", 2m);
-                var (mid, upper, _) = IndicatorLibrary.Bollinger(bars, period, sd);
-                for (var i = 0; i < n; i++)
                 {
-                    if (mid[i] is decimal m && upper[i] is decimal u)
-                    {
-                        var half = u - m;
-                        outp[i] = half == 0m ? 0m : (bars[i].C - m) / half;
-                    }
+                    var fast = (int)Param(c, "fast", 12m);
+                    var slow = (int)Param(c, "slow", 26m);
+                    var signal = (int)Param(c, "signal", 9m);
+                    var (_, _, hist) = IndicatorLibrary.Macd(bars, fast, slow, signal);
+                    outp = hist;
+                    break;
                 }
 
-                break;
-            }
+            case IndicatorKind.PriceVsBollinger:
+                {
+                    var period = (int)Param(c, "period", 20m);
+                    var sd = Param(c, "sd", 2m);
+                    var (mid, upper, _) = IndicatorLibrary.Bollinger(bars, period, sd);
+                    for (var i = 0; i < n; i++)
+                    {
+                        if (mid[i] is decimal m && upper[i] is decimal u)
+                        {
+                            var half = u - m;
+                            outp[i] = half == 0m ? 0m : (bars[i].C - m) / half;
+                        }
+                    }
+
+                    break;
+                }
 
             default:
                 throw new ArgumentOutOfRangeException(nameof(c), c.Indicator, "Unknown indicator kind.");

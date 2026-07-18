@@ -34,7 +34,8 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/components/ui/**/*.tsx', 'src/app/router.tsx'],
+    // ui kit + domain chips co-export cva variants / pure helpers by design.
+    files: ['src/components/ui/**/*.tsx', 'src/components/domain/**/*.tsx', 'src/app/router.tsx'],
     rules: {
       'react-refresh/only-export-components': 'off',
     },

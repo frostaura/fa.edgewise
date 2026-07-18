@@ -11,9 +11,6 @@ import {
 
 import { EmptyState } from '@/components/domain/EmptyState'
 
-/* eslint-disable react-refresh/only-export-components -- settings sections are
-   deliberately co-located; each is mounted via its own lazy route. */
-
 function Section({ icon, title, hint }: { icon: LucideIcon; title: string; hint: string }) {
   return <EmptyState icon={icon} title={title} hint={hint} className="min-h-48" />
 }

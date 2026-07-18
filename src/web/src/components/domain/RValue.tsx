@@ -21,8 +21,7 @@ export function formatR(value: number, precision = 1): string {
  */
 export function RValue({ value, precision = 1, className }: RValueProps) {
   const text = formatR(value, precision)
-  const tone =
-    value > 0 ? 'text-success' : value < 0 ? 'text-destructive' : 'text-muted-foreground'
+  const tone = value > 0 ? 'text-success' : value < 0 ? 'text-destructive' : 'text-muted-foreground'
 
   return (
     <span

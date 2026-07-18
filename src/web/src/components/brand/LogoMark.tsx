@@ -4,7 +4,13 @@ import { cn } from '@/lib/utils'
  * The Edgewise mark: a minimal geometric "E" — three signal bars against a
  * deep-slate tile. Matches the PWA icons generated in scripts/generate-icons.mjs.
  */
-export function LogoMark({ className, title = 'Edgewise' }: { className?: string; title?: string }) {
+export function LogoMark({
+  className,
+  title = 'Edgewise',
+}: {
+  className?: string
+  title?: string
+}) {
   return (
     <svg
       viewBox="0 0 64 64"

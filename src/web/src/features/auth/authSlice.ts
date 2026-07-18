@@ -5,9 +5,7 @@ import { getRefreshToken, getStoredUser } from '@/lib/authStorage'
 
 export type AuthStatus =
   /** A refresh token exists and we are exchanging it for a session. */
-  | 'restoring'
-  | 'authenticated'
-  | 'guest'
+  'restoring' | 'authenticated' | 'guest'
 
 export interface AuthState {
   status: AuthStatus

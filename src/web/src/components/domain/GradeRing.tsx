@@ -36,14 +36,7 @@ export function GradeRing({ score, size = 'md', className }: GradeRingProps) {
       className={cn('relative inline-flex', sizeClasses[size], gradeText[grade], className)}
     >
       <svg viewBox="0 0 100 100" className="size-full -rotate-90">
-        <circle
-          cx="50"
-          cy="50"
-          r={radius}
-          fill="none"
-          strokeWidth="8"
-          className="stroke-muted"
-        />
+        <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="8" className="stroke-muted" />
         <circle
           cx="50"
           cy="50"

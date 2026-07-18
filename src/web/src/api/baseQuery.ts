@@ -28,7 +28,7 @@ function isAuthUrl(args: string | FetchArgs): boolean {
 }
 
 /** Deduplicates concurrent refresh attempts across parallel 401s. */
-let refreshPromise: ReturnType<typeof rawBaseQuery> | null = null
+let refreshPromise: Promise<Awaited<ReturnType<typeof rawBaseQuery>>> | null = null
 
 export const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
@@ -45,13 +45,17 @@ export const baseQueryWithReauth: BaseQueryFn<
     }
 
     if (!refreshPromise) {
-      refreshPromise = rawBaseQuery(
-        { url: '/auth/refresh', method: 'POST', body: { refreshToken } },
-        api,
-        extraOptions,
-      ).finally(() => {
-        refreshPromise = null
-      })
+      refreshPromise = (async () => {
+        try {
+          return await rawBaseQuery(
+            { url: '/auth/refresh', method: 'POST', body: { refreshToken } },
+            api,
+            extraOptions,
+          )
+        } finally {
+          refreshPromise = null
+        }
+      })()
     }
     const refreshResult = await refreshPromise
 

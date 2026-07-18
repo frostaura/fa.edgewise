@@ -5,15 +5,16 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { Loader2Icon } from 'lucide-react'
 import { z } from 'zod'
 
-import { useLoginMutation } from '@/api/authApi'
+import { useLoginTotpMutation } from '@/api/authApi'
 import { getApiErrorMessage } from '@/api/types'
 import { useAppSelector } from '@/app/hooks'
-import { selectIsAuthenticated } from '@/features/auth/authSlice'
+import { selectIsAuthenticated, selectTotpToken } from '@/features/auth/authSlice'
 import { AuthCard, AuthError } from '@/features/auth/AuthCard'
 import { Button } from '@/components/ui/button'
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,56 +23,48 @@ import {
 import { Input } from '@/components/ui/input'
 
 const schema = z.object({
-  email: z.email('Enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
+  code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code from your authenticator app'),
 })
 
 type FormValues = z.infer<typeof schema>
 
-export default function LoginPage() {
+export default function TotpPage() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
+  const totpToken = useAppSelector(selectTotpToken)
   const location = useLocation()
   const navigate = useNavigate()
-  const [login, { isLoading }] = useLoginMutation()
+  const [loginTotp, { isLoading }] = useLoginTotpMutation()
   const [apiError, setApiError] = useState<string | null>(null)
 
   const from = (location.state as { from?: string } | null)?.from ?? '/'
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { code: '' },
   })
 
   if (isAuthenticated) return <Navigate to={from} replace />
+  // No pending TOTP challenge — start over at the login screen.
+  if (!totpToken) return <Navigate to="/login" replace />
 
   const onSubmit = async (values: FormValues) => {
     setApiError(null)
     try {
-      const result = await login(values).unwrap()
-      if (result.requiresTotp) {
-        void navigate('/totp', { state: { from } })
-      } else {
-        void navigate(from, { replace: true })
-      }
+      await loginTotp({ totpToken, code: values.code }).unwrap()
+      void navigate(from, { replace: true })
     } catch (err) {
-      setApiError(getApiErrorMessage(err, 'Sign in failed. Check your credentials.'))
+      setApiError(getApiErrorMessage(err, 'That code did not work. Try again.'))
     }
   }
 
   return (
     <AuthCard
-      title="Welcome back"
-      description="Sign in to your Edgewise account."
+      title="Two-factor authentication"
+      description="Enter the 6-digit code from your authenticator app."
       footer={
-        <span>
-          New here?{' '}
-          <Link
-            to="/register"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Create an account
-          </Link>
-        </span>
+        <Link to="/login" className="font-medium text-primary underline-offset-4 hover:underline">
+          Back to sign in
+        </Link>
       }
     >
       <Form {...form}>
@@ -79,39 +72,29 @@ export default function LoginPage() {
           <AuthError message={apiError} />
           <FormField
             control={form.control}
-            name="email"
+            name="code"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Verification code</FormLabel>
                 <FormControl>
                   <Input
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    placeholder="123456"
                     autoFocus
+                    className="text-center font-mono text-lg tracking-widest"
                     {...field}
                   />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" autoComplete="current-password" {...field} />
-                </FormControl>
+                <FormDescription>Codes rotate every 30 seconds.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Button type="submit" className="mt-2 w-full" disabled={isLoading}>
             {isLoading && <Loader2Icon className="animate-spin" aria-hidden />}
-            Sign in
+            Verify
           </Button>
         </form>
       </Form>
