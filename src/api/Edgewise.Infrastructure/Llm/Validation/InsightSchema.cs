@@ -60,7 +60,7 @@ public static class InsightSchema
                 document.RootElement, new EvaluationOptions { OutputFormat = OutputFormat.List });
             if (!evaluation.IsValid)
             {
-                var errors = evaluation.Details
+                var errors = (evaluation.Details ?? [])
                     .Where(d => d.Errors is { Count: > 0 })
                     .SelectMany(d => d.Errors!.Select(e => $"schema violation at {d.InstanceLocation}: {e.Value}"))
                     .Distinct()
