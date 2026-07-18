@@ -33,8 +33,7 @@ public sealed class TestAppFactory : WebApplicationFactory<Program>, IAsyncLifet
         }
         else
         {
-            _container = new PostgreSqlBuilder()
-                .WithImage("postgres:16-alpine")
+            _container = new PostgreSqlBuilder("postgres:16-alpine")
                 .WithDatabase($"edgewise_test_{Guid.NewGuid():N}")
                 .Build();
             await _container.StartAsync();
