@@ -243,7 +243,9 @@ public sealed class AdherencePipeline(EdgewiseDbContext db, BucketEquityService 
     {
         if (plan is null)
         {
-            return false;
+            // No plan means no checklist to confirm; NO_PLAN already penalises this,
+            // so the self-report rule does not double-fire.
+            return true;
         }
 
         if (string.IsNullOrWhiteSpace(plan.ChecklistConfirmedJson))

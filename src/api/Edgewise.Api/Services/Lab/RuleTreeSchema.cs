@@ -90,7 +90,7 @@ public sealed class RuleTreeValidator
             return fields;
         }
 
-        var results = _schema.Evaluate(node, new EvaluationOptions { OutputFormat = OutputFormat.List });
+        var results = _schema.Evaluate(ruleTree, new EvaluationOptions { OutputFormat = OutputFormat.List });
         if (!results.IsValid)
         {
             foreach (var detail in results.Details)
