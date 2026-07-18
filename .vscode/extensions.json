@@ -1,0 +1,21 @@
+{
+    "recommendations": [
+        // Database
+        "ckolkman.vscode-postgres",
+        // .NET / C# Development
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        // Frontend Development
+        "dbaeumer.vscode-eslint",
+        "orta.vscode-jest",
+        "ms-playwright.playwright",
+        // DevOps & Docker
+        "ms-azuretools.vscode-docker",
+        "github.vscode-github-actions",
+        // UI/UX
+        "oderwat.indent-rainbow",
+        // Diagrams
+        "bpruitt-goddard.mermaid-markdown-syntax-highlighting",
+        "bierner.markdown-mermaid"
+    ]
+}
