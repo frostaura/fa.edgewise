@@ -10,8 +10,8 @@ public sealed class PlansEndpoints : IEndpointModule
     {
         var plans = app.MapGroup("/api/plans").RequireAuthorization();
 
-        plans.MapGet("/", (TradePlanStatus? status, PlanService service, CancellationToken ct) =>
-            service.ListAsync(status, ct));
+        plans.MapGet("/", (string? status, PlanService service, CancellationToken ct) =>
+            service.ListAsync(JournalCommon.ParseEnum<TradePlanStatus>(status, "status"), ct));
 
         plans.MapGet("/size-preview", (
                 Guid bucketId, decimal stopPrice, decimal entryPrice, Guid? riskProfileId,

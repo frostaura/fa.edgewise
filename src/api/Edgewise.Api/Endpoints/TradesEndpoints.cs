@@ -11,11 +11,11 @@ public sealed class TradesEndpoints : IEndpointModule
         var trades = app.MapGroup("/api/trades").RequireAuthorization();
 
         trades.MapGet("/", (
-                TradeStatus? status,
+                string? status,
                 Guid? instrumentId,
                 Guid? bucketId,
                 string? setupTag,
-                EmotionTag? emotion,
+                string? emotion,
                 bool? isPaper,
                 bool? hasPlan,
                 string? grade,
@@ -27,8 +27,11 @@ public sealed class TradesEndpoints : IEndpointModule
                 TradeService service,
                 CancellationToken ct) =>
             service.ListAsync(
-                new TradeListFilter(status, instrumentId, bucketId, setupTag, emotion, isPaper,
-                    hasPlan, grade, from, to, search, page ?? 1, pageSize ?? 25),
+                new TradeListFilter(
+                    JournalCommon.ParseEnum<TradeStatus>(status, "status"),
+                    instrumentId, bucketId, setupTag,
+                    JournalCommon.ParseEnum<EmotionTag>(emotion, "emotion"),
+                    isPaper, hasPlan, grade, from, to, search, page ?? 1, pageSize ?? 25),
                 ct));
 
         trades.MapGet("/{id:guid}", (Guid id, TradeService service, CancellationToken ct) =>

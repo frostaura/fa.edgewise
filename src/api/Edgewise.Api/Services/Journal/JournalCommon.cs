@@ -27,6 +27,23 @@ public static class JournalCommon
     public static Guid RequireUserId(ICurrentUser currentUser) =>
         currentUser.UserId ?? throw ApiException.Unauthorized("unauthorized", "Authentication required.");
 
+    /// <summary>
+    /// Case-insensitive enum parse for query-string parameters (the JSON contract is
+    /// camelCase, so clients naturally send e.g. ?status=open). Null/empty parses to null.
+    /// </summary>
+    public static TEnum? ParseEnum<TEnum>(string? value, string paramName)
+        where TEnum : struct, Enum
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return Enum.TryParse<TEnum>(value, ignoreCase: true, out var parsed)
+            ? parsed
+            : throw ApiException.BadRequest("invalid_" + paramName, $"'{value}' is not a valid {paramName}.");
+    }
+
     public static InstrumentSummaryDto ToSummary(Instrument i) =>
         new(i.Id, i.Symbol, i.Name, i.AssetClass, i.Currency, i.Exchange);
 
