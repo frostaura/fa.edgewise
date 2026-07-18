@@ -125,8 +125,9 @@ public static class BiasDetectors
     {
         ArgumentNullException.ThrowIfNull(trades);
 
-        var items = trades.Where(t => t.RiskAmount is not null).OrderBy(t => t.EntryAt).ToList();
-        var closes = trades.OrderBy(t => t.ClosedAt).ToList();
+        var all = trades.ToList();
+        var items = all.Where(t => t.RiskAmount is not null).OrderBy(t => t.EntryAt).ToList();
+        var closes = all.OrderBy(t => t.ClosedAt).ToList();
 
         var postStreak = new List<BiasTrade>();
         var baseline = new List<BiasTrade>();

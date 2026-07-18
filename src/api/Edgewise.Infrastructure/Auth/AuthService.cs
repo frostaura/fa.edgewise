@@ -360,9 +360,9 @@ public sealed class AuthService(EdgewiseDbContext db, EnvelopeCrypto crypto, Tot
     private static string[] GenerateRecoveryCodes()
     {
         var codes = new string[8];
+        Span<char> chars = stackalloc char[8];
         for (var i = 0; i < codes.Length; i++)
         {
-            Span<char> chars = stackalloc char[8];
             for (var j = 0; j < chars.Length; j++)
             {
                 chars[j] = RecoveryCodeAlphabet[RandomNumberGenerator.GetInt32(RecoveryCodeAlphabet.Length)];

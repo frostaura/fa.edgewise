@@ -6,6 +6,11 @@
  * index.html, then managed by the ui slice / theme listener). */
 @custom-variant dark (&:is(.dark *));
 
+/* Respect notches / home indicators on mobile. */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
