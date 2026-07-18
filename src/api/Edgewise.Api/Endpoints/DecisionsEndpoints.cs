@@ -14,12 +14,13 @@ public sealed class DecisionsEndpoints : IEndpointModule
         var decisions = app.MapGroup("/api/decisions").RequireAuthorization();
 
         decisions.MapGet("/", async (
-            DecisionKind? kind, int? limit, EdgewiseDbContext db, CancellationToken ct) =>
+            string? kind, int? limit, EdgewiseDbContext db, CancellationToken ct) =>
         {
+            var parsedKind = JournalCommon.ParseEnum<DecisionKind>(kind, "kind");
             var query = db.DecisionLogs.AsNoTracking();
-            if (kind is not null)
+            if (parsedKind is not null)
             {
-                query = query.Where(d => d.Kind == kind);
+                query = query.Where(d => d.Kind == parsedKind);
             }
 
             var items = await query
