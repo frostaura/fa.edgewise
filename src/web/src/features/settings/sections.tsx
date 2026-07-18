@@ -1,7 +1,6 @@
 import {
   DatabaseBackupIcon,
   LandmarkIcon,
-  PlugZapIcon,
   ShieldCheckIcon,
   SparklesIcon,
   UserIcon,
@@ -45,15 +44,8 @@ export function BucketsSection() {
   )
 }
 
-export function IntegrationsSection() {
-  return (
-    <Section
-      icon={PlugZapIcon}
-      title="Integrations are coming"
-      hint="Broker connections and data feeds for automatic fill imports."
-    />
-  )
-}
+// Exchange sync (Polymarket / Binance / Coinbase) lives in its own module.
+export { IntegrationsSection } from '@/features/settings/IntegrationsSection'
 
 export function LlmSection() {
   return (
