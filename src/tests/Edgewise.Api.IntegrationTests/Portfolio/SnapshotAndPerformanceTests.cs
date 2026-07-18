@@ -57,13 +57,23 @@ public sealed class SnapshotAndPerformanceTests(TestAppFactory factory)
             db.Snapshots.AddRange(
                 new Snapshot
                 {
-                    Id = Guid.NewGuid(), UserId = userId, BucketId = null,
-                    Date = today.AddDays(-10), EquityMinor = 100000, Currency = "ZAR", NetFlowMinor = 0,
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BucketId = null,
+                    Date = today.AddDays(-10),
+                    EquityMinor = 100000,
+                    Currency = "ZAR",
+                    NetFlowMinor = 0,
                 },
                 new Snapshot
                 {
-                    Id = Guid.NewGuid(), UserId = userId, BucketId = null,
-                    Date = today.AddDays(-1), EquityMinor = 110000, Currency = "ZAR", NetFlowMinor = 0,
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BucketId = null,
+                    Date = today.AddDays(-1),
+                    EquityMinor = 110000,
+                    Currency = "ZAR",
+                    NetFlowMinor = 0,
                 });
             await db.SaveChangesAsync();
         }
@@ -91,13 +101,23 @@ public sealed class SnapshotAndPerformanceTests(TestAppFactory factory)
             db.Snapshots.AddRange(
                 new Snapshot
                 {
-                    Id = Guid.NewGuid(), UserId = userId, BucketId = null,
-                    Date = today.AddDays(-5), EquityMinor = 100000, Currency = "ZAR", NetFlowMinor = 0,
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BucketId = null,
+                    Date = today.AddDays(-5),
+                    EquityMinor = 100000,
+                    Currency = "ZAR",
+                    NetFlowMinor = 0,
                 },
                 new Snapshot
                 {
-                    Id = Guid.NewGuid(), UserId = userId, BucketId = null,
-                    Date = today.AddDays(-1), EquityMinor = 150000, Currency = "ZAR", NetFlowMinor = 50000,
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BucketId = null,
+                    Date = today.AddDays(-1),
+                    EquityMinor = 150000,
+                    Currency = "ZAR",
+                    NetFlowMinor = 50000,
                 });
             await db.SaveChangesAsync();
         }
@@ -154,13 +174,23 @@ public sealed class SnapshotAndPerformanceTests(TestAppFactory factory)
             db.Snapshots.AddRange(
                 new Snapshot
                 {
-                    Id = Guid.NewGuid(), UserId = userId, BucketId = null,
-                    Date = today.AddDays(-2), EquityMinor = 50000, Currency = "ZAR", NetFlowMinor = 50000,
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BucketId = null,
+                    Date = today.AddDays(-2),
+                    EquityMinor = 50000,
+                    Currency = "ZAR",
+                    NetFlowMinor = 50000,
                 },
                 new Snapshot
                 {
-                    Id = Guid.NewGuid(), UserId = userId, BucketId = null,
-                    Date = today.AddDays(-1), EquityMinor = 52000, Currency = "ZAR", NetFlowMinor = 0,
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BucketId = null,
+                    Date = today.AddDays(-1),
+                    EquityMinor = 52000,
+                    Currency = "ZAR",
+                    NetFlowMinor = 0,
                 });
             await db.SaveChangesAsync();
         }

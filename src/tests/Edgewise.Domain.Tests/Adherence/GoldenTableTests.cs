@@ -12,23 +12,23 @@ public class GoldenTableTests
     public static IEnumerable<object[]> Scenarios()
     {
         //                    name                          noPlan oversize widened noTrig early  revenge red    cb     heat   score grade
-        yield return Case("clean trade",                    false, false, false, false, false, false, false, false, false, 100, "A");
-        yield return Case("unplanned only",                 true,  false, false, false, false, false, false, false, false, 60,  "C");
-        yield return Case("oversized only",                 false, true,  false, false, false, false, false, false, false, 80,  "B");
-        yield return Case("stop widened only",              false, false, true,  false, false, false, false, false, false, 75,  "B");
-        yield return Case("no trigger only",                false, false, false, true,  false, false, false, false, false, 85,  "B");
-        yield return Case("early exit only",                false, false, false, false, true,  false, false, false, false, 90,  "A");
-        yield return Case("revenge only",                   false, false, false, false, false, true,  false, false, false, 80,  "B");
-        yield return Case("red event only",                 false, false, false, false, false, false, true,  false, false, 85,  "B");
-        yield return Case("cb override only",               false, false, false, false, false, false, false, true,  false, 75,  "B");
-        yield return Case("over heat cap only",             false, false, false, false, false, false, false, false, true,  85,  "B");
-        yield return Case("sloppy but planned",             false, false, false, true,  true,  false, false, false, false, 75,  "B");
-        yield return Case("unplanned and unconfirmed",      true,  false, false, true,  false, false, false, false, false, 45,  "D");
-        yield return Case("oversized widened revenge",      false, true,  true,  false, false, true,  false, false, false, 35,  "F");
-        yield return Case("unplanned cb revenge",           true,  false, false, false, false, true,  false, true,  false, 15,  "F");
-        yield return Case("early exit through red event",   false, false, false, false, true,  false, true,  false, false, 75,  "B");
-        yield return Case("hot oversized no-trigger",       false, true,  false, true,  false, false, false, false, true,  50,  "D");
-        yield return Case("everything wrong",               true,  true,  true,  true,  true,  true,  true,  true,  true,  0,   "F");
+        yield return Case("clean trade", false, false, false, false, false, false, false, false, false, 100, "A");
+        yield return Case("unplanned only", true, false, false, false, false, false, false, false, false, 60, "C");
+        yield return Case("oversized only", false, true, false, false, false, false, false, false, false, 80, "B");
+        yield return Case("stop widened only", false, false, true, false, false, false, false, false, false, 75, "B");
+        yield return Case("no trigger only", false, false, false, true, false, false, false, false, false, 85, "B");
+        yield return Case("early exit only", false, false, false, false, true, false, false, false, false, 90, "A");
+        yield return Case("revenge only", false, false, false, false, false, true, false, false, false, 80, "B");
+        yield return Case("red event only", false, false, false, false, false, false, true, false, false, 85, "B");
+        yield return Case("cb override only", false, false, false, false, false, false, false, true, false, 75, "B");
+        yield return Case("over heat cap only", false, false, false, false, false, false, false, false, true, 85, "B");
+        yield return Case("sloppy but planned", false, false, false, true, true, false, false, false, false, 75, "B");
+        yield return Case("unplanned and unconfirmed", true, false, false, true, false, false, false, false, false, 45, "D");
+        yield return Case("oversized widened revenge", false, true, true, false, false, true, false, false, false, 35, "F");
+        yield return Case("unplanned cb revenge", true, false, false, false, false, true, false, true, false, 15, "F");
+        yield return Case("early exit through red event", false, false, false, false, true, false, true, false, false, 75, "B");
+        yield return Case("hot oversized no-trigger", false, true, false, true, false, false, false, false, true, 50, "D");
+        yield return Case("everything wrong", true, true, true, true, true, true, true, true, true, 0, "F");
 
         static object[] Case(
             string name, bool noPlan, bool oversize, bool widened, bool noTrigger, bool earlyExit,

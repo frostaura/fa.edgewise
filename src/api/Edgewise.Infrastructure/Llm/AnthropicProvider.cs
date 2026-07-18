@@ -218,7 +218,7 @@ public sealed class AnthropicProvider(LlmOptions options) : ILlmProvider
                             Name = block["name"]?.GetValue<string>() ?? string.Empty,
                             InputJson = block["input"]?.ToJsonString() ?? "{}",
                         });
-                    break;
+                        break;
                 }
             }
         }

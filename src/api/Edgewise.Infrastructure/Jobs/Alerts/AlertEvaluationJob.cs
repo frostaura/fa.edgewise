@@ -104,140 +104,140 @@ public class AlertEvaluationJob(
         switch (alert.Kind)
         {
             case AlertKind.PriceCross:
-            {
-                if (alert.InstrumentId is not { } instrumentId
-                    || !context.Quotes.TryGetValue(instrumentId, out var quote))
                 {
-                    return null;
-                }
+                    if (alert.InstrumentId is not { } instrumentId
+                        || !context.Quotes.TryGetValue(instrumentId, out var quote))
+                    {
+                        return null;
+                    }
 
-                var level = GetDecimal(p, "level") ?? 0;
-                var direction = GetString(p, "direction") ?? "above";
-                if (level <= 0)
-                {
-                    return null;
-                }
+                    var level = GetDecimal(p, "level") ?? 0;
+                    var direction = GetString(p, "direction") ?? "above";
+                    if (level <= 0)
+                    {
+                        return null;
+                    }
 
-                var crossed = direction == "below" ? quote.Price <= level : quote.Price >= level;
-                if (!crossed)
-                {
-                    return null;
-                }
+                    var crossed = direction == "below" ? quote.Price <= level : quote.Price >= level;
+                    if (!crossed)
+                    {
+                        return null;
+                    }
 
-                var symbol = context.Symbol(instrumentId);
-                return new Trigger(
-                    $"{symbol} crossed {direction} {level}",
-                    $"{symbol} is at {quote.Price} (as of {quote.AsOf:HH:mm} UTC), {direction} your {level} level.",
-                    $"/portfolio/assets/{instrumentId}");
-            }
+                    var symbol = context.Symbol(instrumentId);
+                    return new Trigger(
+                        $"{symbol} crossed {direction} {level}",
+                        $"{symbol} is at {quote.Price} (as of {quote.AsOf:HH:mm} UTC), {direction} your {level} level.",
+                        $"/portfolio/assets/{instrumentId}");
+                }
 
             case AlertKind.PctMove:
-            {
-                if (alert.InstrumentId is not { } instrumentId
-                    || !context.Quotes.TryGetValue(instrumentId, out var quote))
                 {
-                    return null;
-                }
+                    if (alert.InstrumentId is not { } instrumentId
+                        || !context.Quotes.TryGetValue(instrumentId, out var quote))
+                    {
+                        return null;
+                    }
 
-                var pct = GetDecimal(p, "pct") ?? 0;
-                var windowMinutes = (int)(GetDecimal(p, "windowMinutes") ?? 60);
-                if (pct <= 0 || windowMinutes <= 0)
-                {
-                    return null;
-                }
+                    var pct = GetDecimal(p, "pct") ?? 0;
+                    var windowMinutes = (int)(GetDecimal(p, "windowMinutes") ?? 60);
+                    if (pct <= 0 || windowMinutes <= 0)
+                    {
+                        return null;
+                    }
 
-                // Reference: the earliest bar close inside the window (H1 bars are the finest we store).
-                var windowStart = now.AddMinutes(-windowMinutes);
-                var reference = await db.PriceBars
-                    .Where(b => b.InstrumentId == instrumentId && b.Ts >= windowStart && b.Ts <= now)
-                    .OrderBy(b => b.Ts)
-                    .Select(b => (decimal?)b.C)
-                    .FirstOrDefaultAsync(ct);
-                if (reference is not > 0)
-                {
-                    return null;
-                }
+                    // Reference: the earliest bar close inside the window (H1 bars are the finest we store).
+                    var windowStart = now.AddMinutes(-windowMinutes);
+                    var reference = await db.PriceBars
+                        .Where(b => b.InstrumentId == instrumentId && b.Ts >= windowStart && b.Ts <= now)
+                        .OrderBy(b => b.Ts)
+                        .Select(b => (decimal?)b.C)
+                        .FirstOrDefaultAsync(ct);
+                    if (reference is not > 0)
+                    {
+                        return null;
+                    }
 
-                var movePct = (quote.Price - reference.Value) / reference.Value * 100m;
-                if (Math.Abs(movePct) < pct)
-                {
-                    return null;
-                }
+                    var movePct = (quote.Price - reference.Value) / reference.Value * 100m;
+                    if (Math.Abs(movePct) < pct)
+                    {
+                        return null;
+                    }
 
-                var symbol = context.Symbol(instrumentId);
-                return new Trigger(
-                    $"{symbol} moved {Math.Round(movePct, 2)}% in {windowMinutes}m",
-                    $"{symbol} moved {Math.Round(movePct, 2)}% over the last {windowMinutes} minutes (now {quote.Price}).",
-                    $"/portfolio/assets/{instrumentId}");
-            }
+                    var symbol = context.Symbol(instrumentId);
+                    return new Trigger(
+                        $"{symbol} moved {Math.Round(movePct, 2)}% in {windowMinutes}m",
+                        $"{symbol} moved {Math.Round(movePct, 2)}% over the last {windowMinutes} minutes (now {quote.Price}).",
+                        $"/portfolio/assets/{instrumentId}");
+                }
 
             case AlertKind.ZoneTouch:
-            {
-                var zoneIdText = GetString(p, "zoneId");
-                if (!Guid.TryParse(zoneIdText, out var zoneId)
-                    || !context.Zones.TryGetValue(zoneId, out var zone)
-                    || zone.UserId != alert.UserId
-                    || !context.Quotes.TryGetValue(zone.InstrumentId, out var quote))
                 {
-                    return null;
-                }
+                    var zoneIdText = GetString(p, "zoneId");
+                    if (!Guid.TryParse(zoneIdText, out var zoneId)
+                        || !context.Zones.TryGetValue(zoneId, out var zone)
+                        || zone.UserId != alert.UserId
+                        || !context.Quotes.TryGetValue(zone.InstrumentId, out var quote))
+                    {
+                        return null;
+                    }
 
-                if (quote.Price < zone.PriceLow || quote.Price > zone.PriceHigh)
-                {
-                    return null;
-                }
+                    if (quote.Price < zone.PriceLow || quote.Price > zone.PriceHigh)
+                    {
+                        return null;
+                    }
 
-                var symbol = context.Symbol(zone.InstrumentId);
-                return new Trigger(
-                    $"{symbol} touched your zone",
-                    $"{symbol} at {quote.Price} is inside your {zone.PriceLow}–{zone.PriceHigh} zone. Write the plan before you act.",
-                    $"/portfolio/assets/{zone.InstrumentId}");
-            }
+                    var symbol = context.Symbol(zone.InstrumentId);
+                    return new Trigger(
+                        $"{symbol} touched your zone",
+                        $"{symbol} at {quote.Price} is inside your {zone.PriceLow}–{zone.PriceHigh} zone. Write the plan before you act.",
+                        $"/portfolio/assets/{zone.InstrumentId}");
+                }
 
             case AlertKind.FgExtreme:
-            {
-                if (context.LatestSentiment is not { } reading)
                 {
-                    return null;
-                }
+                    if (context.LatestSentiment is not { } reading)
+                    {
+                        return null;
+                    }
 
-                var min = (int)(GetDecimal(p, "min") ?? 20);
-                var max = (int)(GetDecimal(p, "max") ?? 80);
-                if (reading.Value > min && reading.Value < max)
-                {
-                    return null;
-                }
+                    var min = (int)(GetDecimal(p, "min") ?? 20);
+                    var max = (int)(GetDecimal(p, "max") ?? 80);
+                    if (reading.Value > min && reading.Value < max)
+                    {
+                        return null;
+                    }
 
-                var side = reading.Value <= min ? "fear" : "greed";
-                return new Trigger(
-                    $"Fear & Greed extreme: {reading.Value} ({reading.Label})",
-                    $"Crypto Fear & Greed is at {reading.Value} ({reading.Label}) — extreme {side} territory.",
-                    "/radar?tab=sentiment");
-            }
+                    var side = reading.Value <= min ? "fear" : "greed";
+                    return new Trigger(
+                        $"Fear & Greed extreme: {reading.Value} ({reading.Label})",
+                        $"Crypto Fear & Greed is at {reading.Value} ({reading.Label}) — extreme {side} territory.",
+                        "/radar?tab=sentiment");
+                }
 
             case AlertKind.CatalystT24:
-            {
-                var relevant = alert.InstrumentId is { } instrumentId
-                    ? context.RedCatalysts24h
-                        .Where(c => c.InstrumentId == instrumentId)
-                        .ToList()
-                    : context.RedCatalysts24h
-                        .Where(c => (c.UserId == null || c.UserId == alert.UserId)
-                            && (c.InstrumentId == null
-                                || context.RelevantInstruments(alert.UserId).Contains(c.InstrumentId.Value)))
-                        .ToList();
-                if (relevant.Count == 0)
                 {
-                    return null;
-                }
+                    var relevant = alert.InstrumentId is { } instrumentId
+                        ? context.RedCatalysts24h
+                            .Where(c => c.InstrumentId == instrumentId)
+                            .ToList()
+                        : context.RedCatalysts24h
+                            .Where(c => (c.UserId == null || c.UserId == alert.UserId)
+                                && (c.InstrumentId == null
+                                    || context.RelevantInstruments(alert.UserId).Contains(c.InstrumentId.Value)))
+                            .ToList();
+                    if (relevant.Count == 0)
+                    {
+                        return null;
+                    }
 
-                var first = relevant.OrderBy(c => c.At).First();
-                var extra = relevant.Count > 1 ? $" (+{relevant.Count - 1} more)" : string.Empty;
-                return new Trigger(
-                    $"Red catalyst inside 24h: {first.Title}{extra}",
-                    $"{first.Title} at {first.At:yyyy-MM-dd HH:mm} UTC is inside the next 24 hours.",
-                    "/radar?tab=calendar");
-            }
+                    var first = relevant.OrderBy(c => c.At).First();
+                    var extra = relevant.Count > 1 ? $" (+{relevant.Count - 1} more)" : string.Empty;
+                    return new Trigger(
+                        $"Red catalyst inside 24h: {first.Title}{extra}",
+                        $"{first.Title} at {first.At:yyyy-MM-dd HH:mm} UTC is inside the next 24 hours.",
+                        "/radar?tab=calendar");
+                }
 
             case AlertKind.FundingRate:
                 // No funding-rate data source available yet — never triggers.

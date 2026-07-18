@@ -73,102 +73,102 @@ public sealed partial class AccountsEndpoints : IEndpointModule
         switch (venue)
         {
             case Venue.Polymarket:
-            {
-                walletAddress = request.WalletAddress?.Trim();
-                if (walletAddress is null || !WalletRegex().IsMatch(walletAddress))
                 {
-                    throw ApiException.BadRequest(
-                        "invalid_wallet", "walletAddress must be a 0x-prefixed 40-hex-character address.");
-                }
-
-                // PRD gotcha: Polymarket keys data by the proxy/deposit wallet, not the
-                // signing EOA. Empty positions AND activity → warn, but still connect.
-                var positions = await polymarket.GetPositionsAsync(walletAddress, ct);
-                if (positions.Count == 0)
-                {
-                    var activity = await polymarket.GetActivityCountAsync(walletAddress, ct);
-                    if (activity == 0)
+                    walletAddress = request.WalletAddress?.Trim();
+                    if (walletAddress is null || !WalletRegex().IsMatch(walletAddress))
                     {
-                        warning = "No data found for this wallet — did you use the proxy/deposit wallet "
-                            + "shown in your Polymarket profile, not your EOA signing wallet?";
+                        throw ApiException.BadRequest(
+                            "invalid_wallet", "walletAddress must be a 0x-prefixed 40-hex-character address.");
                     }
-                }
 
-                break;
-            }
+                    // PRD gotcha: Polymarket keys data by the proxy/deposit wallet, not the
+                    // signing EOA. Empty positions AND activity → warn, but still connect.
+                    var positions = await polymarket.GetPositionsAsync(walletAddress, ct);
+                    if (positions.Count == 0)
+                    {
+                        var activity = await polymarket.GetActivityCountAsync(walletAddress, ct);
+                        if (activity == 0)
+                        {
+                            warning = "No data found for this wallet — did you use the proxy/deposit wallet "
+                                + "shown in your Polymarket profile, not your EOA signing wallet?";
+                        }
+                    }
+
+                    break;
+                }
 
             case Venue.Binance:
-            {
-                if (string.IsNullOrWhiteSpace(request.ApiKey) || string.IsNullOrWhiteSpace(request.ApiSecret))
                 {
-                    throw ApiException.BadRequest("missing_credentials", "apiKey and apiSecret are required for Binance.");
-                }
+                    if (string.IsNullOrWhiteSpace(request.ApiKey) || string.IsNullOrWhiteSpace(request.ApiSecret))
+                    {
+                        throw ApiException.BadRequest("missing_credentials", "apiKey and apiSecret are required for Binance.");
+                    }
 
-                BinanceApiRestrictions restrictions;
-                try
-                {
-                    restrictions = await binance.GetApiRestrictionsAsync(
-                        request.ApiKey.Trim(), request.ApiSecret.Trim(), ct);
-                }
-                catch (IntegrationException ex)
-                {
-                    throw ApiException.BadRequest(ex.Code, ex.Message);
-                }
+                    BinanceApiRestrictions restrictions;
+                    try
+                    {
+                        restrictions = await binance.GetApiRestrictionsAsync(
+                            request.ApiKey.Trim(), request.ApiSecret.Trim(), ct);
+                    }
+                    catch (IntegrationException ex)
+                    {
+                        throw ApiException.BadRequest(ex.Code, ex.Message);
+                    }
 
-                // INT-004: reject over-scoped keys with a clear, actionable error.
-                var problems = new List<string>();
-                if (!restrictions.EnableReading)
-                {
-                    problems.Add("\"Enable Reading\" is switched off");
-                }
+                    // INT-004: reject over-scoped keys with a clear, actionable error.
+                    var problems = new List<string>();
+                    if (!restrictions.EnableReading)
+                    {
+                        problems.Add("\"Enable Reading\" is switched off");
+                    }
 
-                if (restrictions.EnableSpotAndMarginTrading)
-                {
-                    problems.Add("\"Enable Spot & Margin Trading\" is switched on");
-                }
+                    if (restrictions.EnableSpotAndMarginTrading)
+                    {
+                        problems.Add("\"Enable Spot & Margin Trading\" is switched on");
+                    }
 
-                if (restrictions.EnableWithdrawals)
-                {
-                    problems.Add("\"Enable Withdrawals\" is switched on");
-                }
+                    if (restrictions.EnableWithdrawals)
+                    {
+                        problems.Add("\"Enable Withdrawals\" is switched on");
+                    }
 
-                if (problems.Count > 0)
-                {
-                    throw ApiException.BadRequest(
-                        "key_over_scoped",
-                        "This Binance API key is not read-only: " + string.Join("; ", problems)
-                        + ". Create a key with only \"Enable Reading\" and try again.");
-                }
+                    if (problems.Count > 0)
+                    {
+                        throw ApiException.BadRequest(
+                            "key_over_scoped",
+                            "This Binance API key is not read-only: " + string.Join("; ", problems)
+                            + ". Create a key with only \"Enable Reading\" and try again.");
+                    }
 
-                credentialsEnc = crypto.Encrypt(JsonSerializer.Serialize(
-                    new BinanceCredentials(request.ApiKey.Trim(), request.ApiSecret.Trim()),
-                    IntegrationJson.Options));
-                break;
-            }
+                    credentialsEnc = crypto.Encrypt(JsonSerializer.Serialize(
+                        new BinanceCredentials(request.ApiKey.Trim(), request.ApiSecret.Trim()),
+                        IntegrationJson.Options));
+                    break;
+                }
 
             case Venue.Coinbase:
-            {
-                if (string.IsNullOrWhiteSpace(request.KeyName) || string.IsNullOrWhiteSpace(request.PrivateKeyPem))
                 {
-                    throw ApiException.BadRequest(
-                        "missing_credentials", "keyName and privateKeyPem are required for Coinbase.");
-                }
+                    if (string.IsNullOrWhiteSpace(request.KeyName) || string.IsNullOrWhiteSpace(request.PrivateKeyPem))
+                    {
+                        throw ApiException.BadRequest(
+                            "missing_credentials", "keyName and privateKeyPem are required for Coinbase.");
+                    }
 
-                try
-                {
-                    CoinbaseJwtGenerator.ValidatePrivateKey(request.PrivateKeyPem);
-                    await coinbase.ValidateCredentialsAsync(request.KeyName.Trim(), request.PrivateKeyPem, ct);
-                }
-                catch (IntegrationException ex)
-                {
-                    throw ApiException.BadRequest(ex.Code, ex.Message);
-                }
+                    try
+                    {
+                        CoinbaseJwtGenerator.ValidatePrivateKey(request.PrivateKeyPem);
+                        await coinbase.ValidateCredentialsAsync(request.KeyName.Trim(), request.PrivateKeyPem, ct);
+                    }
+                    catch (IntegrationException ex)
+                    {
+                        throw ApiException.BadRequest(ex.Code, ex.Message);
+                    }
 
-                credentialsEnc = crypto.Encrypt(JsonSerializer.Serialize(
-                    new CoinbaseCredentials(request.KeyName.Trim(), request.PrivateKeyPem),
-                    IntegrationJson.Options));
-                break;
-            }
+                    credentialsEnc = crypto.Encrypt(JsonSerializer.Serialize(
+                        new CoinbaseCredentials(request.KeyName.Trim(), request.PrivateKeyPem),
+                        IntegrationJson.Options));
+                    break;
+                }
         }
 
         var stats = new AccountSyncStats { Warning = warning };

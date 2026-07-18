@@ -132,73 +132,73 @@ public sealed class AlertsEndpoints : IEndpointModule
         switch (kind)
         {
             case AlertKind.PriceCross:
-            {
-                await RequireInstrumentAsync(db, instrumentId, ct);
-                var level = GetDecimal(p, "level")
-                    ?? throw ApiException.BadRequest("invalid_params", "priceCross requires params.level > 0.");
-                if (level <= 0)
                 {
-                    throw ApiException.BadRequest("invalid_params", "priceCross requires params.level > 0.");
-                }
+                    await RequireInstrumentAsync(db, instrumentId, ct);
+                    var level = GetDecimal(p, "level")
+                        ?? throw ApiException.BadRequest("invalid_params", "priceCross requires params.level > 0.");
+                    if (level <= 0)
+                    {
+                        throw ApiException.BadRequest("invalid_params", "priceCross requires params.level > 0.");
+                    }
 
-                var direction = GetString(p, "direction")?.ToLowerInvariant();
-                if (direction is not ("above" or "below"))
-                {
-                    throw ApiException.BadRequest("invalid_params", "priceCross direction must be \"above\" or \"below\".");
-                }
+                    var direction = GetString(p, "direction")?.ToLowerInvariant();
+                    if (direction is not ("above" or "below"))
+                    {
+                        throw ApiException.BadRequest("invalid_params", "priceCross direction must be \"above\" or \"below\".");
+                    }
 
-                return (instrumentId, Serialize(new { level, direction }));
-            }
+                    return (instrumentId, Serialize(new { level, direction }));
+                }
 
             case AlertKind.PctMove:
-            {
-                await RequireInstrumentAsync(db, instrumentId, ct);
-                var pct = GetDecimal(p, "pct") ?? 0;
-                if (pct <= 0)
                 {
-                    throw ApiException.BadRequest("invalid_params", "pctMove requires params.pct > 0.");
-                }
+                    await RequireInstrumentAsync(db, instrumentId, ct);
+                    var pct = GetDecimal(p, "pct") ?? 0;
+                    if (pct <= 0)
+                    {
+                        throw ApiException.BadRequest("invalid_params", "pctMove requires params.pct > 0.");
+                    }
 
-                var window = (int)(GetDecimal(p, "windowMinutes") ?? 60);
-                if (window <= 0)
-                {
-                    throw ApiException.BadRequest("invalid_params", "pctMove windowMinutes must be > 0.");
-                }
+                    var window = (int)(GetDecimal(p, "windowMinutes") ?? 60);
+                    if (window <= 0)
+                    {
+                        throw ApiException.BadRequest("invalid_params", "pctMove windowMinutes must be > 0.");
+                    }
 
-                return (instrumentId, Serialize(new { pct, windowMinutes = window }));
-            }
+                    return (instrumentId, Serialize(new { pct, windowMinutes = window }));
+                }
 
             case AlertKind.ZoneTouch:
-            {
-                var zoneIdText = GetString(p, "zoneId");
-                if (!Guid.TryParse(zoneIdText, out var zoneId))
                 {
-                    throw ApiException.BadRequest("invalid_params", "zoneTouch requires params.zoneId (a zone you own).");
-                }
+                    var zoneIdText = GetString(p, "zoneId");
+                    if (!Guid.TryParse(zoneIdText, out var zoneId))
+                    {
+                        throw ApiException.BadRequest("invalid_params", "zoneTouch requires params.zoneId (a zone you own).");
+                    }
 
-                var zone = await db.Zones.SingleOrDefaultAsync(z => z.Id == zoneId && !z.Archived, ct)
-                    ?? throw ApiException.BadRequest("zone_not_found", "Zone not found (or archived).");
-                return (zone.InstrumentId, Serialize(new { zoneId }));
-            }
+                    var zone = await db.Zones.SingleOrDefaultAsync(z => z.Id == zoneId && !z.Archived, ct)
+                        ?? throw ApiException.BadRequest("zone_not_found", "Zone not found (or archived).");
+                    return (zone.InstrumentId, Serialize(new { zoneId }));
+                }
 
             case AlertKind.FundingRate:
-            {
-                await RequireInstrumentAsync(db, instrumentId, ct);
-                var threshold = GetDecimal(p, "thresholdPct") ?? 0.05m;
-                return (instrumentId, Serialize(new { thresholdPct = threshold }));
-            }
-
-            case AlertKind.FgExtreme:
-            {
-                var min = (int)(GetDecimal(p, "min") ?? 20);
-                var max = (int)(GetDecimal(p, "max") ?? 80);
-                if (min < 0 || max > 100 || min >= max)
                 {
-                    throw ApiException.BadRequest("invalid_params", "fgExtreme requires 0 <= min < max <= 100.");
+                    await RequireInstrumentAsync(db, instrumentId, ct);
+                    var threshold = GetDecimal(p, "thresholdPct") ?? 0.05m;
+                    return (instrumentId, Serialize(new { thresholdPct = threshold }));
                 }
 
-                return (null, Serialize(new { min, max }));
-            }
+            case AlertKind.FgExtreme:
+                {
+                    var min = (int)(GetDecimal(p, "min") ?? 20);
+                    var max = (int)(GetDecimal(p, "max") ?? 80);
+                    if (min < 0 || max > 100 || min >= max)
+                    {
+                        throw ApiException.BadRequest("invalid_params", "fgExtreme requires 0 <= min < max <= 100.");
+                    }
+
+                    return (null, Serialize(new { min, max }));
+                }
 
             case AlertKind.CatalystT24:
                 return (instrumentId, "{}");
