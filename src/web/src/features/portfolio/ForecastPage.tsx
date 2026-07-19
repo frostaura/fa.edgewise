@@ -1,5 +1,5 @@
 import { useReducer, useState } from 'react'
-import { PlayIcon, SaveIcon, SparklesIcon, Trash2Icon, TrendingUpIcon } from 'lucide-react'
+import { PlayIcon, PlusIcon, SaveIcon, SparklesIcon, Trash2Icon, TrendingUpIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import {
@@ -42,12 +42,14 @@ function PctInput({
   min = -100,
   max = 200,
   className,
+  'aria-label': ariaLabel,
 }: {
   value: number
   onChange: (fraction: number) => void
   min?: number
   max?: number
   className?: string
+  'aria-label'?: string
 }) {
   return (
     <div className={`relative ${className ?? ''}`}>
@@ -56,6 +58,7 @@ function PctInput({
         step="0.5"
         min={min}
         max={max}
+        aria-label={ariaLabel}
         value={Number.isFinite(value) ? Math.round(value * 1000) / 10 : 0}
         onChange={(e) => onChange(Number(e.target.value) / 100)}
         className="pr-7 text-right tabular-nums"
@@ -78,6 +81,7 @@ export default function ForecastPage() {
   const [form, dispatch] = useReducer(forecastFormReducer, initialForecastForm)
   const [selectedId, setSelectedId] = useState<string>('')
   const [name, setName] = useState('My forecast')
+  const [newAssetKey, setNewAssetKey] = useState('')
   const [result, setResult] = useState<ForecastResult | null>(null)
 
   const selected = forecasts.find((f) => f.id === selectedId)
@@ -209,7 +213,8 @@ export default function ForecastPage() {
               </p>
             ) : (
               <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-[1fr_5.5rem_5.5rem_5rem_auto] items-center gap-2 text-xs font-medium text-muted-foreground">
+                {/* Column headers only make sense when the row renders as a grid (sm+). */}
+                <div className="hidden grid-cols-[1fr_5.5rem_5.5rem_5rem_auto] items-center gap-2 text-xs font-medium text-muted-foreground sm:grid">
                   <span>Asset</span>
                   <span className="text-right">Growth</span>
                   <span className="text-right">Vol</span>
@@ -219,21 +224,25 @@ export default function ForecastPage() {
                 {form.assets.map((asset) => (
                   <div
                     key={asset.key}
-                    className="grid grid-cols-[1fr_5.5rem_5.5rem_5rem_auto] items-center gap-2"
+                    className="flex flex-wrap items-center gap-2 sm:grid sm:grid-cols-[1fr_5.5rem_5.5rem_5rem_auto]"
                   >
-                    <div className="flex min-w-0 flex-col">
+                    <div className="flex w-full min-w-0 items-baseline gap-2 sm:w-auto sm:flex-col sm:items-stretch sm:gap-0">
                       <span className="truncate text-sm font-medium">{asset.key}</span>
                       <span className="text-xs text-muted-foreground">
                         {formatMinor(asset.currentValueMinor)}
                       </span>
                     </div>
                     <PctInput
+                      className="w-20 sm:w-auto"
+                      aria-label={`${asset.key} annual growth`}
                       value={asset.annualGrowthPct}
                       onChange={(v) =>
                         dispatch({ type: 'setAssetField', key: asset.key, field: 'annualGrowthPct', value: v })
                       }
                     />
                     <PctInput
+                      className="w-20 sm:w-auto"
+                      aria-label={`${asset.key} annual volatility`}
                       value={asset.annualVolPct ?? 0}
                       min={0}
                       max={300}
@@ -242,6 +251,8 @@ export default function ForecastPage() {
                       }
                     />
                     <PctInput
+                      className="w-20 sm:w-auto"
+                      aria-label={`${asset.key} contribution split`}
                       value={form.splits[asset.key] ?? 0}
                       min={0}
                       max={100}
@@ -259,6 +270,35 @@ export default function ForecastPage() {
                 ))}
               </div>
             )}
+
+            {/* Manual assumption row — the only path for users with no valued
+                holdings yet (seeding returns nothing for them). */}
+            <form
+              className="flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const key = newAssetKey.trim().toUpperCase()
+                if (!key) return
+                dispatch({ type: 'addAsset', key })
+                setNewAssetKey('')
+              }}
+            >
+              <Input
+                value={newAssetKey}
+                onChange={(e) => setNewAssetKey(e.target.value)}
+                placeholder="Asset name (e.g. BTC)"
+                aria-label="New asset name"
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+                disabled={newAssetKey.trim().length === 0}
+              >
+                <PlusIcon className="size-4" aria-hidden />
+                Add asset
+              </Button>
+            </form>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">

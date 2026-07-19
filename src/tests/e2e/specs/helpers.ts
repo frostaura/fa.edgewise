@@ -8,7 +8,6 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 
 /** Shared scratch state between the journey and visual projects. */
 export const STATE_DIR = path.join(here, '..', '.auth')
-export const STORAGE_STATE = path.join(STATE_DIR, 'user.json')
 export const RUN_STATE = path.join(STATE_DIR, 'run-state.json')
 export const SCREENSHOT_DIR = path.join(here, '..', 'screenshots')
 
@@ -16,6 +15,7 @@ export interface RunState {
   email: string
   password: string
   tradeId?: string
+  strategyId?: string
 }
 
 export function saveRunState(state: RunState): void {

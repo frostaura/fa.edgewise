@@ -173,7 +173,10 @@ export const radarApi = edgewiseApi.injectEndpoints({
     // Defensive reads against endpoints owned by other verticals — every
     // consumer handles isError by hiding/degrading the section.
     getInstruments: build.query<InstrumentSummary[], void>({
-      query: () => '/instruments',
+      // The market vertical exposes the shared catalogue under /lab/instruments;
+      // a bare /instruments route does not exist (it 404s and every consumer
+      // silently degraded to a raw-UUID input).
+      query: () => '/lab/instruments',
       transformResponse: (response: unknown): InstrumentSummary[] => {
         if (Array.isArray(response)) return response as InstrumentSummary[]
         if (response && typeof response === 'object') {
