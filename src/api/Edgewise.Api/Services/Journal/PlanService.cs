@@ -16,6 +16,29 @@ public sealed class PlanService(EdgewiseDbContext db, ICurrentUser currentUser, 
     /// <summary>Suggested size differing from the actual by more than this fraction flags an override.</summary>
     public const decimal OverrideTolerance = 0.02m;
 
+    /// <summary>
+    /// The target rule is stored in a jsonb column, but the UI explicitly allows
+    /// "JSON or free text". Wrap anything that is not valid JSON as a JSON string
+    /// so free-text rules round-trip instead of failing the insert.
+    /// </summary>
+    private static string? NormalizeTargetRule(string? targetRule)
+    {
+        if (string.IsNullOrWhiteSpace(targetRule))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var _ = JsonDocument.Parse(targetRule);
+            return targetRule;
+        }
+        catch (JsonException)
+        {
+            return JsonSerializer.Serialize(targetRule);
+        }
+    }
+
     // ------------------------------------------------------------- sizing
 
     public async Task<SizePreviewDto> SizePreviewAsync(
@@ -111,7 +134,7 @@ public sealed class PlanService(EdgewiseDbContext db, ICurrentUser currentUser, 
             SetupTag = request.SetupTag,
             TriggerText = request.TriggerText,
             StopPrice = request.StopPrice,
-            TargetRuleJson = request.TargetRuleJson,
+            TargetRuleJson = NormalizeTargetRule(request.TargetRuleJson),
             SizeQty = sizeQty,
             SizeOverridden = overridden,
             InvalidationNote = request.InvalidationNote,
@@ -168,10 +191,14 @@ public sealed class PlanService(EdgewiseDbContext db, ICurrentUser currentUser, 
             coreChanged = true;
         }
 
-        if (request.TargetRuleJson is not null && request.TargetRuleJson != plan.TargetRuleJson)
+        if (request.TargetRuleJson is not null)
         {
-            plan.TargetRuleJson = request.TargetRuleJson;
-            coreChanged = true;
+            var normalized = NormalizeTargetRule(request.TargetRuleJson);
+            if (normalized != plan.TargetRuleJson)
+            {
+                plan.TargetRuleJson = normalized;
+                coreChanged = true;
+            }
         }
 
         if (request.SizeQty is not null && request.SizeQty != plan.SizeQty)

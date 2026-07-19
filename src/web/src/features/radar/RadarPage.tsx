@@ -27,7 +27,9 @@ export default function RadarPage() {
       />
 
       <Tabs value={tab} onValueChange={(value) => setSearchParams({ tab: value })}>
-        <TabsList className="flex-wrap">
+        {/* h-auto: the base TabsList fixes h-9, which clips the second row when
+            the five triggers wrap on narrow viewports. */}
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="watchlists">Watchlists</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="news">News</TabsTrigger>
