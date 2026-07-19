@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/api/">
+    <Project Path="src/api/Edgewise.Api/Edgewise.Api.csproj" />
+    <Project Path="src/api/Edgewise.Contracts/Edgewise.Contracts.csproj" />
+    <Project Path="src/api/Edgewise.Domain/Edgewise.Domain.csproj" />
+    <Project Path="src/api/Edgewise.Infrastructure/Edgewise.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/tests/">
+    <Project Path="src/tests/Edgewise.Api.IntegrationTests/Edgewise.Api.IntegrationTests.csproj" />
+    <Project Path="src/tests/Edgewise.Domain.Tests/Edgewise.Domain.Tests.csproj" />
+  </Folder>
+</Solution>
