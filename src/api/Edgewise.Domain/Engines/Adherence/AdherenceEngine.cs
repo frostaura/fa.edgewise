@@ -184,5 +184,11 @@ public static class AdherenceEngine
 
     private static string Iso(DateTime at) => at.ToString("O", CultureInfo.InvariantCulture);
 
-    private static string Dec(decimal value) => value.ToString(CultureInfo.InvariantCulture);
+    private static string Dec(decimal value)
+    {
+        // Trim trailing decimal zeros so evidence strings stay readable
+        // (values arrive with full decimal(28,10) precision).
+        var normalized = value / 1.000000000000000000000000000000000m;
+        return normalized.ToString(CultureInfo.InvariantCulture);
+    }
 }
